@@ -1,0 +1,396 @@
+# Project TODO
+
+- [x] Initialize Expo React Native project
+- [x] Create mobile interface design plan
+- [x] Define clinical-safety-first MVP scope
+- [x] Create and install branded app icon assets
+- [x] Update app configuration with EMDR Therapy branding
+- [x] Replace template theme with calm EMDR palette
+- [x] Build Home tab with check-in and safe entry points
+- [x] Build Progress tab with local session summaries
+- [x] Build Journal tab with local reflection storage
+- [x] Build Settings tab with safety and privacy controls
+- [x] Build session setup flow with duration and BLS mode selection
+- [x] Build preparation and assessment flow
+- [x] Build bilateral stimulation screen with visual animation
+- [x] Add optional haptic and audio mode indicators with safe fallbacks
+- [x] Add persistent pause/stop-to-grounding behavior
+- [x] Build grounding and closure flow
+- [x] Add local-first session persistence
+- [ ] Add resource library for grounding and breathing
+- [ ] Add deterministic unit tests for session state and local persistence
+- [x] Run TypeScript, lint, and test checks
+- [x] Capture responsive preview screenshots and refine UI
+- [ ] Save final checkpoint
+- [x] Add calm first-launch onboarding with safety, control, BLS, and privacy education
+- [ ] Add optional preference setup without requiring trauma details
+- [x] Add accessible theme tokens and motion-reduction-friendly interactions
+- [x] Add session start safety checklist and explicit consent checkpoint
+- [x] Add crisis-safe copy and avoid unsupported clinical claims
+- [x] Add optional audio BLS mode with a local, non-clinical cue source
+- [x] Configure audio for silent-mode-safe playback and cleanup
+- [x] Keep audio cues secondary to visual state and never required for session completion
+- [x] Add volume and headphone-safety guidance before audio use
+- [x] Rebuild dashboard to match supplied Home Dashboard design sheet
+- [ ] Rebuild session wizard with Baseline / Target / Processing / Closure steps
+- [x] Rebuild BLS screen with visual dot, audio/haptics controls, speed, and customize panel
+- [x] Add progress insights cards for SUD reduction, session frequency, and phase completion
+- [x] Add reusable design-system components for cards, pills, segmented controls, and state badges
+- [x] Add dark-mode visual treatment matching the supplied reference states
+- [x] Add crisis resources surface matching the supplied emergency design
+- [x] Add therapist connection and secure settings entry points as safe non-functional surfaces
+- [x] Persist journal reflections locally with a recent-entry view
+- [x] Complete session closure with final SUD, reflection, and saved summary
+- [x] Add crisis resources screen with immediate-support copy and call/text actions
+- [x] Add therapist connection and secure settings entry points as safe non-functional surfaces
+- [x] Add onboarding and preference setup routes without requiring trauma disclosure
+- [x] Add explicit therapy modality types while keeping EMDR as the active MVP modality
+- [x] Add session lifecycle status and offline-safe local queue semantics
+- [x] Add therapist collaboration as an opt-in, non-networked placeholder surface
+- [x] Add safety-plan entry point without collecting sensitive data by default
+- [x] Add accessible reduced-motion and offline state messaging
+- [x] Add minimal local safety-plan screen with trusted contacts and immediate-support guidance
+- [x] Persist onboarding and experience preferences locally
+- [x] Apply reduced-motion preference to bilateral stimulation animation
+- [x] Add offline/local-only status messaging where session data is shown
+- [x] Add deterministic tests for journal, session, safety-plan, and preference storage
+- [x] Add a grounding and breathing resource library with calm, non-clinical exercises
+- [x] Create shared persisted preference context for haptics and reduced motion
+- [x] Add Baseline, Target, Processing, and Closure progress indicators to the session wizard
+- [x] Connect Home grounding entry point to the new resource library
+- [x] Preserve safe stop and therapist guidance copy throughout the expanded wizard
+- [x] Add a guided breathing timer with pause, reset, and reduced-motion support
+- [x] Show live saved-session progress metrics on the Home dashboard
+- [x] Add therapist-reviewed content labels and scope boundaries to resources
+- [x] Add a direct breathing entry point from the grounding resource library
+- [x] Add first-use Home empty state with a clear first-session invitation
+- [x] Add breathing completion feedback after a gentle set of rounds
+- [x] Add accessibility labels and roles to primary session controls
+- [x] Refine first-use and completion copy to remain supportive and non-clinical
+- [x] Add clinician-review status and scope boundaries to Progress and session screens
+- [x] Add breathing practice records to local storage and Progress history
+- [x] Add a unified recent activity list for sessions, breathing, and reflections
+- [x] Add accessibility labels to Progress charts and session wizard controls
+- [x] Improve pressed, paused, and saved feedback across primary actions
+- [x] Add accessible text summaries for Progress charts and metrics
+- [x] Add clinician-review status panel with versioned content boundary copy
+- [x] Add local data export preview without network upload
+- [x] Add explicit confirmation flow for deleting local data
+- [x] Add tests for local data deletion and export shaping
+- [x] Add bounded post-session documentation assistant model
+- [x] Require recording/transcription consent before documentation drafting
+- [x] Add clinician review, correction, and approval state before note use
+- [x] Keep grounding companion restricted to present-moment exercises
+- [x] Document server-side AI gateway requirements and no mobile provider keys
+- [x] Add de-identified simulated-patient scenarios with training-only cues
+- [x] Add local session telemetry records for sets, pauses, SUD, and supervisor cues
+- [x] Add scenario selection to the training entry point
+- [x] Add telemetry review screen with non-clinical interpretation
+- [x] Add persistence tests for scenario and telemetry shaping
+- [x] Add unified AI contracts and audit trace structures
+- [x] Add consent, therapist-assignment, activation, fatigue, and override policy gates
+- [x] Add structured synthetic patient-state and explainable supervisor findings
+- [x] Add transcript character cap and simple PII redaction boundary
+- [x] Add bounded grounding AI contract with traumaReprocessingAllowed false
+- [x] Add educational training score with non-competency labeling
+- [x] Add local AI Lab self-check screen
+- [x] Add AI quality golden cases and adversarial safety tests
+- [x] Pass selected simulated-patient scenario into session setup
+- [x] Persist telemetry session events for live BLS and closure actions
+- [x] Show persisted telemetry in the review screen
+- [x] Add restricted-language and malformed-output guard tests
+- [x] Add scenario and telemetry persistence tests
+- [x] Capture live BLS set-start, pause, stop, and SUD events
+- [x] Carry scenario identity through preparation, grounding, and closure
+- [x] Show scenario-specific teaching cue in closure and telemetry review
+- [x] Add tests for telemetry lifecycle event aggregation
+- [x] Add local subscription plan catalog for Free, Basic, Professional, and Enterprise previews
+- [x] Add feature entitlement and usage-limit helpers without disabling core safety tools
+- [x] Add transparent pricing and upgrade comparison screen
+- [x] Add local subscription preview state without pretending a payment succeeded
+- [x] Add monetization governance notes for App Store/Play billing, privacy, refunds, and clinical review
+- [x] Add tests for plan limits and entitlement behavior
+- [x] Add local active-plan state with explicit preview-only status
+- [x] Add reusable entitlement gate copy for premium training features
+- [x] Keep grounding, crisis, stop, and deletion features outside monetization gates
+- [x] Add server-side billing and receipt-validation boundary notes
+- [x] Add tests for preview subscription transitions and safety-feature access
+- [x] Add reusable plan-aware feature gate card with preview-only upgrade action
+- [x] Add gated advanced telemetry and documentation entry messaging
+- [x] Keep grounding, crisis, stop, and local-data deletion actions visibly ungated
+- [x] Add tests for plan-aware gate behavior and safety-feature invariants
+- [x] Add plan-aware documentation assistant gate with clinician-review copy
+- [x] Keep documentation consent and safety boundaries visible for every plan
+- [x] Add automated invariants for grounding, crisis, stop, safety-plan, and local deletion access
+- [x] Add plan-transition tests for documentation and safety access
+- [x] Add detailed documentation assistant preview with gated capabilities and always-visible consent
+- [x] Add explicit cancellation and refund-notice boundary copy without processing billing
+- [x] Add entitlement helpers that distinguish preview state from verified subscription state
+- [x] Add tests for documentation gates, safety invariants, and cancellation boundaries
+- [x] Add explicit entitlement lifecycle states: Preview, Pending, Verified, and Expired
+- [x] Add auditable subscription-status panel to Settings or Plans
+- [x] Add organization-seat and clinical-governance boundary messaging
+- [x] Add lifecycle tests and safety-route invariants for every state
+- [x] Capture live BLS set-start, pause, stop, and SUD events
+- [x] Carry scenario identity through preparation, grounding, and closure
+- [x] Show scenario-specific teaching cue in closure and telemetry review
+- [x] Add tests for telemetry lifecycle event aggregation
+- [x] Add local interrupted-session recovery state and resume entry point
+- [x] Add telemetry timeline formatting with phase grouping
+- [x] Add phase-aware supervisor guidance for preparation, processing, and closure
+- [x] Add recovery and timeline aggregation tests
+- [x] Persist active BLS mode, duration, elapsed progress, and scenario name for recovery
+- [x] Restore saved BLS configuration when resuming an interrupted session
+- [x] Add direct Ground instead action to the recovery card
+- [x] Add recovery configuration tests
+- [x] Persist BLS audio, haptics, and speed settings for recovery
+- [x] Add recovery confirmation copy before resuming
+- [x] Add confirmed local discard action for unfinished sessions
+- [x] Add tests for recovery discard and control persistence
+- [x] Add compact saved-session summary to recovery card
+- [x] Start resumed BLS sessions paused for deliberate restart
+- [x] Record recovery and discard actions in local telemetry audit events
+- [x] Add tests for recovery audit and paused-on-resume behavior
+- [x] Add dedicated local recovery-audit surface in Settings
+- [x] Add separate recovery-history clear control with confirmation
+- [x] Add paused-state orientation before BLS restart
+- [x] Add tests for recovery audit visibility and clearing
+- [x] Add paused-state orientation panel inside BLS
+- [x] Add resumed/discarded audit filter
+- [x] Show recovery-audit count in local export preview
+- [x] Add tests for orientation and privacy review changes
+- [x] Add screen-reader summary for paused BLS orientation
+- [x] Add counts to recovery-audit filters
+- [x] Expand local export preview with explicit included-data categories
+- [x] Add release-readiness tests for accessibility and export shaping
+- [x] Add accessible labels and state descriptions to audio toggle
+- [x] Add accessible labels and state descriptions to haptics toggle
+- [x] Add accessible labels and selected-state descriptions to speed controls
+- [x] Add accessibility regression coverage
+- [x] Inspect and resolve current runtime or navigation errors
+- [x] Add defensive error handling around local persistence and session transitions
+- [x] Add clearly labeled deterministic fallback data for unavailable training views
+- [x] Add regression tests for persistence failures and fallback shaping
+- [x] Replace remaining deprecated pointerEvents and shadow style usage
+- [x] Add user-facing error handling for local data actions
+- [x] Add clearly labeled fallback data to Progress or scenario review
+- [x] Add simulated failure-path regression tests
+- [x] Trace and resolve the remaining pointerEvents deprecation warning
+- [x] Add retry-safe feedback for local export and deletion actions
+- [x] Add clearly labeled fallback data to Progress or scenario review
+- [x] Add resilience tests for fallback and action-failure behavior
+- [x] Trace and resolve the remaining runtime deprecation warning
+- [x] Add safe retry handling to supervisor, scenario, and telemetry review loading
+- [x] Add clearly labeled deterministic fallback data to remaining review surfaces
+- [x] Add regression tests for review loading failures and fallback shaping
+- [x] Trace and resolve remaining runtime warnings
+- [x] Harden remaining review and recovery actions with safe retry feedback
+- [x] Add clearly labeled deterministic fallback content to training screens
+- [x] Add regression tests for resilience behavior
+- [x] Add a test-only storage failure switch for deterministic tests
+- [x] Harden documentation and supervisor loading or action paths
+- [x] Add clearly labeled fallback states to documentation and supervisor views
+- [x] Add failure-path regression tests for storage and review screens
+- [x] Add retry-safe loading and fallback state to supervisor review
+- [x] Add retry-safe drafting and fallback state to documentation review
+- [x] Trace the remaining runtime warning to its source and document the boundary
+- [x] Add review resilience regression tests
+- [x] Add visible retry action after documentation fallback creation
+- [x] Harden remaining review screen loading and empty states
+- [x] Expand clearly labeled deterministic fallback coverage
+- [x] Add retry and fallback regression tests
+- [x] Add a test-only switch to force documentation fallback
+- [x] Add explicit reset-to-consent action after draft review
+- [x] Harden documentation retry behavior with clear state feedback
+- [x] Add fallback and reset regression tests
+- [x] Add visible retry-in-progress and retry-failed feedback to documentation fallback
+- [x] Add deterministic UI-state helpers for fallback and reset behavior
+- [x] Add regression coverage for retry and reset state transitions
+- [x] Recheck remaining runtime warning boundary
+- [x] Add retry-attempt count to documentation fallback state
+- [x] Add non-blocking retry loading feedback and prevent duplicate taps
+- [x] Add retry-state regression coverage
+- [x] Audit and improve session recovery and BLS interaction reliability
+- [x] Strengthen local-first review loading and user feedback flows
+- [x] Add actionable functional regression coverage for improved flows
+- [x] Add shared local-data error and retry feedback across key screens
+- [x] Improve clinician-training session flow reliability and recovery
+- [x] Add functional regression coverage for shared feedback and session transitions
+- [x] Improve active-session progress visibility and pause/resume behavior
+- [x] Strengthen recovery actions with reliable local feedback
+- [x] Add functional regression coverage for session transitions
+- [x] Strengthen end-to-end session transition reliability
+- [x] Add reusable local-data status feedback across key screens
+- [x] Add functional regression coverage for session transitions and feedback
+- [x] Preserve session and scenario parameters across every training phase
+- [x] Harden BLS stop-to-grounding navigation against duplicate taps and save failures
+- [x] Add retry-safe closure saving with completion telemetry and accessible SUD controls
+- [x] Add local-only status messaging to Session Setup
+- [x] Add deterministic session-flow contract regression tests
+- [x] Make local session-summary writes report success or failure
+- [x] Add regression assertions for persistence acknowledgment and retry behavior
+- [ ] Improve recovery completion and grounding transition feedback
+- [x] Audit current diagnostics and remaining local and async failure seams
+- [x] Add defensive handling and transparent deterministic fallbacks
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit current diagnostics and remaining local and async failure seams
+- [x] Add defensive handling and transparent deterministic fallbacks
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit current diagnostics and remaining local and asynchronous failure seams
+- [x] Add defensive handling and transparent deterministic fallbacks for training data
+- [x] Add regression coverage and validate this reliability pass
+- [x] Audit current diagnostics and remaining local-data and async failure seams
+- [x] Add defensive handling and transparent deterministic fallbacks
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit current diagnostics and remaining local-operation failure paths
+- [x] Add defensive handling and transparent deterministic mock fallbacks
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit remaining local persistence, loading, and fallback failure paths
+- [x] Add defensive error handling and clearly labeled deterministic mock fallbacks
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit and fix reproducible build, runtime, and persistence errors
+- [x] Add local customizable soundscape and background-noise options
+- [x] Add visible interruption pause handling with graceful audio recovery
+- [x] Add component tests for retry and fallback UI states
+- [x] Reproduce current build and runtime diagnostics
+- [x] Apply targeted fixes and harden failure states
+- [x] Validate the app and save a recoverable checkpoint
+- [x] Run fresh diagnostics and trace current build or runtime failures
+- [x] Apply targeted fixes with safe fallback behavior
+- [x] Validate fixes and save a recoverable checkpoint
+- [x] Diagnose current build, runtime, and persistence errors
+- [x] Add defensive handling and clearly labeled deterministic fallbacks
+- [x] Validate fixes and save a recoverable checkpoint
+- [x] Improve clinician visibility for local audio-check results
+- [x] Add safe audio control feedback and deterministic coverage
+- [x] Persist stereo-check feedback locally for clinician review
+- [x] Add safe failure feedback and deterministic coverage for stereo feedback
+- [x] Add targeted playback safeguards and clinician-friendly audio feedback
+- [x] Add deterministic audio coverage and validate the latest refinement
+- [x] Add focused audio safety and usability refinements
+- [x] Add deterministic audio regression coverage and validate the screens
+- [x] Add clearer live audio readiness and interruption recovery feedback
+- [x] Add safer audio retry and confirmation behavior
+- [x] Add deterministic coverage and validate the audio refinement
+- [x] Add device-safe audio route and interruption guidance
+- [x] Add clearer cue-test confirmation and retry feedback
+- [x] Add deterministic coverage and validate the latest audio refinements
+- [x] Add clinician-safe cue timing controls to audio BLS
+- [x] Persist cue timing and improve audio interruption recovery feedback
+- [x] Add deterministic coverage and validate the latest audio controls
+- [x] Add guarded device-route interruption feedback to audio BLS
+- [x] Add stereo-test confirmation and retry-safe status handling
+- [x] Add deterministic coverage and validate the refined audio workflow
+- [x] Add optional stereo cue sequence and clear test status
+- [x] Add interruption-safe audio recovery and clinician-safe volume ceiling
+- [x] Add deterministic coverage and validate the enhanced audio flow
+- [x] Add a safe pre-session audio cue check with left/right confirmation
+- [x] Persist BLS audio volume preferences and handle interruption fallback
+- [x] Add deterministic audio regression coverage and validate the flow
+- [x] Improve EMDR audio initialization, playback status, and user controls
+- [x] Add audio failure fallback and deterministic regression coverage
+- [x] Validate audio BLS flow and save a checkpoint
+- [x] Audit remaining runtime and data failure paths for this pass
+- [x] Add transparent deterministic mock fallback states where local data is unavailable
+- [x] Add regression coverage and validate affected screens before checkpoint
+- [x] Audit remaining runtime and data failure paths for this pass
+- [x] Add transparent deterministic mock fallback states where local data is unavailable
+- [x] Add regression coverage and validate affected screens before checkpoint
+- [x] Continue error-handling audit and add deterministic mock fallbacks for remaining unavailable local/runtime states
+- [x] Add regression coverage for newly hardened failure paths
+- [x] Validate affected screens and save a checkpoint
+- [x] Add clinician-training progress and accessibility refinements
+- [ ] Add regression coverage for the next reliability improvements
+- [ ] Add busy and failure feedback to Home recovery actions
+- [ ] Make recovery audit and discard outcomes observable to the UI
+- [x] Add regression coverage for recovery action outcomes
+- [x] Add visible busy state for Home recovery actions
+- [x] Add visible recovery-action failure and retry feedback
+- [x] Add regression coverage for Home recovery action state
+- [x] Add visible feedback to the Home Ground instead recovery action
+- [x] Add a shared recovery transition status model
+- [x] Add regression coverage for recovery transition states
+- [x] Add visible busy and failure feedback to Ground instead recovery
+- [x] Add Ground instead transition status coverage
+- [x] Diagnose the error in pasted_content_5.txt
+- [x] Apply a targeted fix for the reported error
+- [x] Validate the fix with TypeScript, lint, tests, and relevant preview checks
+- [x] Audit uncaught local-data and training-flow errors
+- [x] Add clearly labeled deterministic mock-data fallback behavior
+- [x] Add regression coverage for fallback and recovery paths
+- [x] Validate affected screens and save a hardened checkpoint
+- [x] Audit remaining local-data failure paths
+- [x] Add safe deterministic mock fallback where data is unavailable
+- [x] Improve user-facing retry and unavailable-state handling
+- [x] Add regression coverage and validate affected screens
+- [x] Audit remaining persistence and screen failure paths
+- [x] Add safe deterministic fallback for unavailable review data
+- [x] Improve retryable feedback for remaining local settings actions
+- [x] Add regression coverage and validate affected screens
+- [x] Audit remaining uncaught persistence failures
+- [x] Add another safe deterministic fallback or unavailable-state guard
+- [x] Improve remaining user-facing local error handling
+- [x] Add regression coverage and verify affected flows
+- [x] Audit remaining runtime and persistence seams
+- [x] Add targeted error handling or safe fallback behavior
+- [x] Strengthen deterministic regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime failure paths
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen runtime regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime failure paths
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen runtime regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and fallback seams
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and fallback seams
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and fallback seams
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining error-prone screens and storage paths
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and fallback seams
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and local-data failure paths
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and persistence seams
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and local-data failure paths
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit remaining runtime and local-data failure paths
+- [x] Add safe deterministic fallback or unavailable-state handling
+- [x] Strengthen regression coverage
+- [x] Validate affected flows and save a checkpoint
+- [x] Audit current runtime, persistence, and malformed-data failure paths
+- [x] Add defensive validation and more transparent deterministic mock fallbacks
+- [x] Add regression coverage and validate the affected flows
+- [x] Audit record-level persistence and review-screen failure paths
+- [x] Add safe record validation and deterministic training fallbacks
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit remaining persistence and screen-loading failure paths
+- [x] Add safe validation and clearly labeled deterministic fallback behavior
+- [x] Add regression coverage and validate the reliability pass
+- [x] Audit clinician-training therapy flows and safety guidance
+- [x] Improve session guidance and local therapist review signals
+- [x] Add regression coverage and validate therapy improvements
+- [x] Audit final therapy flow and reproducible diagnostics
+- [x] Implement one focused therapy improvement and fix any errors
+- [x] Validate and prepare final ZIP-exportable project version

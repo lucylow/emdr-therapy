@@ -1,0 +1,8 @@
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { useSubscriptionPreview } from '@/lib/subscription-context';
+import type { SubscriptionTier } from '@/lib/monetization';
+
+const rank: Record<SubscriptionTier, number> = { free: 0, basic: 1, professional: 2, enterprise: 3 };
+export function FeatureGate({ requiredTier, feature, children }: { requiredTier: SubscriptionTier; feature: string; children: React.ReactNode }) { const { tier } = useSubscriptionPreview(); if (rank[tier] >= rank[requiredTier]) return <>{children}</>; return <View style={styles.card}><Text style={styles.kicker}>PREVIEW FEATURE</Text><Text style={styles.title}>{feature} is shown in the {requiredTier} plan concept.</Text><Text style={styles.body}>This does not change access yet. Choose a plan preview to explore the product model; no payment is processed.</Text><Pressable accessibilityRole="button" onPress={() => router.push('/monetization')} style={styles.button}><Text style={styles.buttonText}>Review plans</Text></Pressable></View>; }
+const styles = StyleSheet.create({ card: { backgroundColor: '#FFF7E9', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#EAD7B8' }, kicker: { color: '#9A6B35', fontSize: 10, letterSpacing: 1, fontWeight: '800', marginBottom: 5 }, title: { color: '#16252D', fontSize: 14, fontWeight: '800', lineHeight: 19 }, body: { color: '#776345', fontSize: 11, lineHeight: 17, marginTop: 5 }, button: { marginTop: 10, alignSelf: 'flex-start', borderRadius: 10, backgroundColor: '#2F6F68', paddingHorizontal: 12, paddingVertical: 9 }, buttonText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800' } });
