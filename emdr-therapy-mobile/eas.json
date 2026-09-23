@@ -1,13 +1,21 @@
 {
   "cli": {
-    "appVersionSource": "remote"
+    "version": ">=16.18.0",
+    "appVersionSource": "local"
   },
   "build": {
-    "production": {
-      "autoIncrement": true
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "environment": "preview"
+    },
+    "production": {
+      "distribution": "store",
+      "autoIncrement": true,
+      "environment": "production"
     }
   },
   "submit": {

@@ -1,48 +1,55 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { ENV } from "./env";
 
-export function registerStorageProxy(app: Express) {
-  app.get("/manus-storage/*", async (req, res) => {
+function isAllowedPublicKey(key: string): boolean {
+  return ENV.publicStoragePrefixes.some((prefix) => key.startsWith(prefix));
+}
+
+/**
+ * Presigns only explicitly configured public asset prefixes. User records and
+ * private uploads must use an authenticated, ownership-checked route instead.
+ */
+export function registerStorageProxy(app: Express): void {
+  app.get("/manus-storage/*", async (req: Request, res: Response) => {
     const key = (req.params as Record<string, string>)[0];
-    if (!key) {
-      res.status(400).send("Missing storage key");
+    if (!key || !isAllowedPublicKey(key)) {
+      res.status(404).send("Asset not found");
       return;
     }
-
     if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-      res.status(500).send("Storage proxy not configured");
+      res.status(503).send("Asset delivery is unavailable");
       return;
     }
 
     try {
       const forgeUrl = new URL(
         "v1/storage/presign/get",
-        ENV.forgeApiUrl.replace(/\/+$/, "") + "/",
+        `${ENV.forgeApiUrl.replace(/\/+$/, "")}/`,
       );
       forgeUrl.searchParams.set("path", key);
-
       const forgeResp = await fetch(forgeUrl, {
         headers: { Authorization: `Bearer ${ENV.forgeApiKey}` },
       });
-
       if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[StorageProxy] forge error: ${forgeResp.status} ${body}`);
-        res.status(502).send("Storage backend error");
+        if (!ENV.isProduction)
+          console.error("[storage] presign request failed", forgeResp.status);
+        res.status(502).send("Asset delivery is unavailable");
         return;
       }
-
-      const { url } = (await forgeResp.json()) as { url: string };
+      const { url } = (await forgeResp.json()) as { url?: string };
       if (!url) {
-        res.status(502).send("Empty signed URL from backend");
+        res.status(502).send("Asset delivery is unavailable");
         return;
       }
-
-      res.set("Cache-Control", "no-store");
+      res.set("Cache-Control", "public, max-age=3600");
       res.redirect(307, url);
-    } catch (err) {
-      console.error("[StorageProxy] failed:", err);
-      res.status(502).send("Storage proxy error");
+    } catch (error) {
+      if (!ENV.isProduction)
+        console.error(
+          "[storage] proxy failed",
+          error instanceof Error ? error.name : "unknown",
+        );
+      res.status(502).send("Asset delivery is unavailable");
     }
   });
 }
