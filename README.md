@@ -9,6 +9,16 @@
 
 > **Important:** This repository documents a software project for wellbeing and therapeutic-support workflows. It is not a substitute for a licensed mental-health professional, emergency services, or individualized clinical care. Features that involve emotionally difficult material should be designed and used with appropriate professional guidance. The application should not be represented as diagnosing, treating, curing, or preventing a medical condition unless the required clinical, regulatory, and evidentiary work has actually been completed.
 
+![](https://github.com/lucylow/emdr-therapy/blob/main/7657.png?raw=true)
+![](https://github.com/lucylow/emdr-therapy/blob/main/76.png?raw=true)
+
+![](https://github.com/lucylow/emdr-therapy/blob/main/123.png?raw=true)
+![](https://github.com/lucylow/emdr-therapy/blob/main/43.png?raw=true)
+![](https://github.com/lucylow/emdr-therapy/blob/main/432.png?raw=true)
+
+![](https://github.com/lucylow/emdr-therapy/blob/main/54.png?raw=true)
+![](https://github.com/lucylow/emdr-therapy/blob/main/76.png?raw=true)
+![](https://github.com/lucylow/emdr-therapy/blob/main/9999.png?raw=true)
 ---
 
 ## Table of Contents
