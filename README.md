@@ -1,7 +1,7 @@
 # EMDR Therapy Mobile
 
 ### A privacy-aware mobile companion for guided bilateral-stimulation experiences, reflection, session preparation, and wellbeing workflows
-
+ 
 ![Status](https://img.shields.io/badge/status-active%20development-blue)
 ![Platform](https://img.shields.io/badge/platform-mobile-111827)
 ![Documentation](https://img.shields.io/badge/docs-25%2B%20page%20equivalent-7c3aed)
