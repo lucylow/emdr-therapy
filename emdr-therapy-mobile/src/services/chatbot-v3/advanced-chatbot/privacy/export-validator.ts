@@ -1,0 +1,10 @@
+export type UserDataExport={version:1;createdAt:string;preferences:Record<string,string|number|boolean>;events:Array<{type:string;at:string;sourceId?:string}>};
+const PREF_KEY=/^(locale|tone|reducedMotion|audioEnabled|confirmedFeatures|responseLength|fontScale)$/;
+const TOP_LEVEL=new Set(['version','createdAt','preferences','events']);
+const EVENT_KEYS=new Set(['type','at','sourceId']);
+const EVENT_TYPE=/^(preference-confirmed|feedback-positive|feedback-negative|local-answer|remote-answer|privacy-request|data-deleted)$/;
+export function validateUserDataExport(value:unknown):value is UserDataExport {if(!value||typeof value!=='object')return false;const v=value as Record<string,unknown>;if(Object.keys(v).some(k=>!TOP_LEVEL.has(k))||v.version!==1||typeof v.createdAt!=='string'||!Number.isFinite(Date.parse(v.createdAt))||!v.preferences||typeof v.preferences!=='object'||Array.isArray(v.preferences)||!Array.isArray(v.events)||v.events.length>1000)return false;
+ for(const [key,val]of Object.entries(v.preferences as Record<string,unknown>)){if(!PREF_KEY.test(key)||!['string','number','boolean'].includes(typeof val)||typeof val==='string'&&val.length>100||typeof val==='number'&&!Number.isFinite(val))return false;}
+ return(v.events as unknown[]).every(e=>{if(!e||typeof e!=='object')return false;const r=e as Record<string,unknown>;if(Object.keys(r).some(k=>!EVENT_KEYS.has(k)))return false;return typeof r.type==='string'&&EVENT_TYPE.test(r.type)&&typeof r.at==='string'&&Number.isFinite(Date.parse(r.at))&&(r.sourceId===undefined||typeof r.sourceId==='string'&&/^[a-z0-9_.-]{1,70}$/i.test(r.sourceId));});}
+export function safeExportSummary(value:UserDataExport):{preferenceCount:number;eventCount:number;includesTranscript:boolean;version:1}{return{preferenceCount:Object.keys(value.preferences).length,eventCount:value.events.length,includesTranscript:false,version:1};}
+export function stripUnknownExportFields(value:Record<string,unknown>):UserDataExport|undefined {const candidate={version:value.version,createdAt:value.createdAt,preferences:value.preferences,events:value.events};return validateUserDataExport(candidate)?candidate:undefined;}

@@ -1,0 +1,8 @@
+import type { Intent, Locale, UserPreferences } from '../types.ts';
+export type AnswerLength='short'|'standard'|'detailed';
+const LIMITS:Record<AnswerLength,{min:number;max:number;sentences:number}>={short:{min:20,max:360,sentences:2},standard:{min:40,max:850,sentences:5},detailed:{min:80,max:1400,sentences:8}};
+const EMERGENCY=new Set<Intent>(['stop','pause','resume','safety_support']);
+export function chooseAnswerLength(intent:Intent,prefs?:UserPreferences,explicitRequest?:string):AnswerLength {if(EMERGENCY.has(intent))return'short';if(/\b(brief|short|quick|concise)\b/i.test(explicitRequest??''))return'short';if(/\b(detail|in depth|explain more|step by step)\b/i.test(explicitRequest??''))return'detailed';if(prefs?.tone==='concise')return'short';return'standard';}
+export function enforceAnswerLength(text:string,length:AnswerLength,intent:Intent):{text:string;truncated:boolean;sentenceCount:number} {const limit=LIMITS[length];const sentenceList=text.split(/(?<=[.!?])\s+/).map(s=>s.trim()).filter(Boolean);if(EMERGENCY.has(intent)){const first=sentenceList[0]??text;return{text:first.slice(0,400),truncated:text.length>first.length,sentenceCount:Math.min(1,sentenceList.length)};}
+ let output=text.trim();let truncated=false;if(sentenceList.length>limit.sentences){output=sentenceList.slice(0,limit.sentences).join(' ');truncated=true;}if(output.length>limit.max){let cut=output.slice(0,limit.max);const boundary=cut.lastIndexOf(' ');output=cut.slice(0,boundary>limit.max*.65?boundary:limit.max).trimEnd();truncated=true;}return{text:output,truncated,sentenceCount:output?output.split(/(?<=[.!?])\s+/).filter(Boolean).length:0};}
+export function answerLengthLimits(length:AnswerLength):{min:number;max:number;sentences:number}{return{...LIMITS[length]};}

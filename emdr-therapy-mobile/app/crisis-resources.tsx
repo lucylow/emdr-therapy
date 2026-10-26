@@ -1,13 +1,15 @@
 import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
 import { router } from "expo-router";
 import { ScreenContainer } from "@/components/screen-container";
 import { BilateralMark, Card, DS } from "@/components/ui/design-system";
 import { haptic } from "@/lib/haptics";
 
 export default function CrisisResourcesScreen() {
+  const [linkError, setLinkError] = useState(false);
   const open = (url: string) => {
     haptic.medium();
-    void Linking.openURL(url);
+    void Linking.openURL(url).then(() => setLinkError(false)).catch(() => setLinkError(true));
   };
   return (
     <ScreenContainer
@@ -29,13 +31,14 @@ export default function CrisisResourcesScreen() {
           </Text>
           <Text style={styles.alertBody}>
             Stop using the session tools and contact local emergency services
-            now, or go to the nearest emergency department.
+            now, or go to the nearest emergency department. This page cannot detect your location.
           </Text>
           <Pressable onPress={() => open("tel:911")} style={styles.alertButton}>
             <Text style={styles.alertButtonText}>
-              Call local emergency services
+              Call 911 (US/Canada)
             </Text>
           </Pressable>
+          <Text style={styles.resourceBody}>If you are elsewhere, call your local emergency number.</Text>
         </Card>
         <Text style={styles.section}>Talk with someone now</Text>
         <Card>
@@ -48,8 +51,7 @@ export default function CrisisResourcesScreen() {
                 988 Suicide & Crisis Lifeline
               </Text>
               <Text style={styles.resourceBody}>
-                Call or text 988 in the United States and Canada where
-                available.
+                Call or text 988 in the United States or Canada.
               </Text>
             </View>
             <Text style={styles.chevron}>›</Text>
@@ -68,6 +70,7 @@ export default function CrisisResourcesScreen() {
             <Text style={styles.chevron}>›</Text>
           </Pressable>
         </Card>
+        {linkError ? <Text accessibilityRole="alert" style={styles.linkError}>This device could not open the call or text link. Use your phone to contact local emergency services or a trusted person.</Text> : null}
         <Card tint={DS.lavender}>
           <Text style={styles.groundTitle}>Not in immediate danger?</Text>
           <Text style={styles.groundBody}>
@@ -142,6 +145,7 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   resourceBody: { color: DS.muted, fontSize: 11, lineHeight: 16 },
+  linkError: { color: DS.coral, fontSize: 12, lineHeight: 18, fontWeight: "700" },
   chevron: { color: DS.muted, fontSize: 24 },
   divider: { height: 1, backgroundColor: DS.line, marginVertical: 13 },
   groundTitle: {

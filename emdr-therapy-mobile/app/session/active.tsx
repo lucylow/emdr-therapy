@@ -1,5 +1,4 @@
-import React from "react";
-import { ActiveSessionScreen } from "../../src/screens/ActiveSessionScreen";
+import { Redirect } from "expo-router";
 export default function ActiveSessionRoute() {
-  return <ActiveSessionScreen />;
+  return <Redirect href="/session/setup" />;
 }

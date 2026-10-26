@@ -1,63 +1,79 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { haptic } from "@/lib/haptics";
 import { carrySessionParams, type SessionFlowParams } from "@/lib/session-flow";
-const prompts = [
-  "Feel both feet supported by the floor.",
-  "Notice one thing you can see.",
-  "Notice one sound near you.",
-  "Take one slower breath than the last.",
+const orientPrompts = [
+  "Notice one color or object in the room, if you like.",
+  "Notice a sound nearby, or choose a quiet moment.",
+  "Look around at your own pace. You do not need to close your eyes.",
+  "If comfortable, notice where your body is supported. You can skip body focus.",
+  "If it feels helpful, notice one easy breath. You can also simply look around.",
+];
+const movementPrompts = [
+  "If comfortable, roll your shoulders gently once—or choose stillness.",
+  "You could move your hands or fingers in a comfortable way, or skip movement.",
+  "You may shift your position if you want. No movement is required.",
 ];
 export default function GroundingScreen() {
   const params = useLocalSearchParams<SessionFlowParams>();
   const sessionParams = carrySessionParams(params);
+  const [mode, setMode] = useState<"orient" | "movement">("orient");
   const [index, setIndex] = useState(0);
-  useEffect(() => {
-    const timer = setInterval(
-      () => setIndex((v) => (v + 1) % prompts.length),
-      4500,
-    );
-    return () => clearInterval(timer);
-  }, []);
+  const prompts = mode === "orient" ? orientPrompts : movementPrompts;
   return (
     <ScreenContainer
       edges={["top", "bottom", "left", "right"]}
       containerClassName="bg-[#F4F7F5]"
       className="px-5"
     >
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.orb}>
           <View style={styles.orbInner} />
         </View>
         <Text style={styles.eyebrow}>GROUNDING</Text>
         <Text style={styles.heading}>Come back to this moment.</Text>
-        <Text style={styles.body}>
-          Stimulation is stopped. There is nothing else you need to do right
-          now.
-        </Text>
+        <Text style={styles.body}>Stimulation is stopped. Choose an outward cue, optional gentle movement, or no activity. You can stop or leave whenever you want.</Text>
         {params.scenarioName ? (
           <Text style={styles.caseNote}>
             Training case · {params.scenarioName}
           </Text>
         ) : null}
+        <View style={styles.modeRow} accessibilityRole="radiogroup" accessibilityLabel="Choose an optional grounding activity">
+          <Pressable accessibilityRole="radio" accessibilityState={{ selected: mode === "orient" }} onPress={() => { setMode("orient"); setIndex(0); }} style={[styles.modeButton, mode === "orient" && styles.modeButtonActive]}><Text style={styles.modeText}>Look around</Text></Pressable>
+          <Pressable accessibilityRole="radio" accessibilityState={{ selected: mode === "movement" }} onPress={() => { setMode("movement"); setIndex(0); }} style={[styles.modeButton, mode === "movement" && styles.modeButtonActive]}><Text style={styles.modeText}>Move gently</Text></Pressable>
+        </View>
         <View style={styles.prompt}>
-          <Text style={styles.promptNumber}>
-            {String(index + 1).padStart(2, "0")}
+          <Text style={styles.promptNumber}>{String(index + 1).padStart(2, "0")} · {mode === "orient" ? "OPTIONAL CUE" : "OPTIONAL MOVEMENT"}</Text>
+          <Text
+            accessibilityLiveRegion="polite"
+            accessibilityRole="summary"
+            style={styles.promptText}
+          >
+            {prompts[index]}
           </Text>
-          <Text style={styles.promptText}>{prompts[index]}</Text>
         </View>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Skip this cue and show another option"
           onPress={() => {
-            haptic.light();
             setIndex((v) => (v + 1) % prompts.length);
           }}
           style={styles.button}
         >
-          <Text style={styles.buttonText}>Next grounding cue</Text>
+          <Text style={styles.buttonText}>Another option</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Open optional gentle breathing exercise"
+          onPress={() => router.push("/breathing")}
+          style={styles.breathingButton}
+        >
+          <Text style={styles.breathingText}>Try a gentle breathing tool</Text>
+        </Pressable>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="End safely and continue to session closure"
           onPress={() =>
             router.push({
               pathname: "/session/closure",
@@ -67,12 +83,17 @@ export default function GroundingScreen() {
         >
           <Text style={styles.end}>End safely</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </ScreenContainer>
   );
 }
 const styles = StyleSheet.create({
-  content: { flex: 1, justifyContent: "center", gap: 16 },
+  content: {
+    flexGrow: 1,
+    justifyContent: "center",
+    gap: 16,
+    paddingVertical: 24,
+  },
   orb: {
     width: 104,
     height: 104,
@@ -132,10 +153,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#2F6F68",
     alignItems: "center",
     borderRadius: 15,
+    minHeight: 48,
+    justifyContent: "center",
     paddingVertical: 16,
     marginTop: 8,
   },
   buttonText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  breathingButton: {
+    minHeight: 48,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#D9E2DE",
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 14,
+  },
+  breathingText: { color: "#2F6F68", fontSize: 14, fontWeight: "700" },
+  modeRow: { flexDirection: "row", justifyContent: "center", gap: 8, flexWrap: "wrap" },
+  modeButton: { minHeight: 44, justifyContent: "center", paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: "#D9E2DE", backgroundColor: "#FFFFFF" },
+  modeButtonActive: { backgroundColor: "#DCEBE5", borderColor: "#2F6F68" },
+  modeText: { color: "#2F6F68", fontSize: 13, fontWeight: "700" },
   caseNote: {
     color: "#2F6F68",
     textAlign: "center",
@@ -147,6 +185,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 14,
     fontWeight: "700",
-    padding: 8,
+    minHeight: 44,
+    padding: 10,
   },
 });

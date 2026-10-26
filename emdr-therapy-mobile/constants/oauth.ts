@@ -125,10 +125,16 @@ async function readPendingState(): Promise<PendingOAuthState | null> {
 
 async function clearPendingState(): Promise<void> {
   if (ReactNative.Platform.OS === "web") {
-    window.sessionStorage.removeItem(OAUTH_STATE_KEY);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(OAUTH_STATE_KEY);
+    }
     return;
   }
   await SecureStore.deleteItemAsync(OAUTH_STATE_KEY);
+}
+
+export async function clearPendingOAuthState(): Promise<void> {
+  await clearPendingState();
 }
 
 export function isOAuthConfigured(): boolean {

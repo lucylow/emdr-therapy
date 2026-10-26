@@ -5,7 +5,7 @@ import {
   updateAudioPreference,
 } from "../domain/preferences/preferencesSchema";
 import type { Reflection } from "../data/mock";
-import { REFLECTIONS } from "../data/mock";
+import { REFLECTIONS, USER_PROFILE } from "../data/mock";
 import { storage, STORAGE_KEYS } from "../services/storage/storage";
 
 interface AppStateValue {
@@ -64,7 +64,7 @@ export function AppStateProvider({ children }: React.PropsWithChildren) {
       onboardingComplete,
       preferences,
       reflections,
-      profileName: "Alex Morgan",
+      profileName: USER_PROFILE.name,
       setOnboardingComplete,
       setPreferences,
       updateAudio,

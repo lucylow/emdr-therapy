@@ -129,7 +129,9 @@ export default function HomeScreen() {
                     sessionId: interrupted.sessionId,
                     scenarioId: interrupted.scenarioId,
                     scenarioName: interrupted.scenarioName,
-                    sud: String(interrupted.initialSud ?? 0),
+                    ...(interrupted.initialSud !== undefined
+                      ? { sud: String(interrupted.initialSud) }
+                      : {}),
                     mode: interrupted.mode ?? "visual",
                     duration: String(interrupted.durationMinutes ?? 10),
                     elapsedSeconds: String(interrupted.elapsedSeconds ?? 0),
@@ -198,12 +200,15 @@ export default function HomeScreen() {
     }, [loadHome]),
   );
   const latest = sessions[0];
-  const averageReduction = sessions.length
+  const selfReportChanges = sessions.flatMap((session) =>
+    session.initialSud !== undefined && session.finalSud !== undefined
+      ? [session.initialSud - session.finalSud]
+      : [],
+  );
+  const averageReduction = selfReportChanges.length
     ? Math.round(
-        sessions.reduce(
-          (sum, session) => sum + (session.initialSud - session.finalSud),
-          0,
-        ) / sessions.length,
+        selfReportChanges.reduce((sum, change) => sum + change, 0) /
+          selfReportChanges.length,
       )
     : null;
   return (
@@ -311,7 +316,9 @@ export default function HomeScreen() {
                               sessionId: interrupted.sessionId,
                               scenarioId: interrupted.scenarioId,
                               scenarioName: interrupted.scenarioName,
-                              sud: String(interrupted.initialSud ?? 0),
+                              ...(interrupted.initialSud !== undefined
+                                ? { sud: String(interrupted.initialSud) }
+                                : {}),
                               mode: interrupted.mode ?? "visual",
                               duration: String(
                                 interrupted.durationMinutes ?? 10,
@@ -373,7 +380,9 @@ export default function HomeScreen() {
                           sessionId: interrupted.sessionId,
                           scenarioId: interrupted.scenarioId,
                           scenarioName: interrupted.scenarioName,
-                          sud: String(interrupted.initialSud ?? 0),
+                          ...(interrupted.initialSud !== undefined
+                            ? { sud: String(interrupted.initialSud) }
+                            : {}),
                           mode: interrupted.mode ?? "visual",
                           duration: String(interrupted.durationMinutes ?? 10),
                         },
@@ -452,15 +461,15 @@ export default function HomeScreen() {
             <View>
               <Text
                 style={styles.statValue}
-              >{`${averageReduction && averageReduction > 0 ? "↓ " : ""}${averageReduction ?? 0} SUD`}</Text>
-              <Text style={styles.statLabel}>average change</Text>
+              >{`${averageReduction === null ? "—" : `${averageReduction > 0 ? "−" : "+"}${Math.abs(averageReduction)} points`}`}</Text>
+              <Text style={styles.statLabel}>average self-report change</Text>
             </View>
             <View style={styles.statDivider} />
             <View>
               <Text style={styles.statValue}>
-                {latest ? `${latest.finalSud}/10` : "—"}
+                {latest?.finalSud === undefined ? "—" : `${latest.finalSud}/10`}
               </Text>
-              <Text style={styles.statLabel}>latest SUD</Text>
+              <Text style={styles.statLabel}>latest self-rating</Text>
             </View>
           </View>
         )}
@@ -474,8 +483,9 @@ export default function HomeScreen() {
           <View style={{ flex: 1 }}>
             <Text style={styles.safetyTitle}>A note on care</Text>
             <Text style={styles.safetyBody}>
-              This is an assistive tool, not a replacement for a qualified
-              therapist. Stop anytime if you feel overwhelmed.
+              This app does not diagnose or replace licensed EMDR care. Do not
+              use it for unsupervised trauma processing. Stop and ground if you
+              feel uncomfortable or unsafe.
             </Text>
           </View>
         </View>

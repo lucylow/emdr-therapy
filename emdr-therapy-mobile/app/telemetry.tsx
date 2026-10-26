@@ -14,38 +14,6 @@ import {
 } from "@/lib/telemetry";
 import { SIMULATED_SCENARIOS } from "@/lib/scenarios";
 
-const sample: SessionTelemetry = {
-  sessionId: "training-preview",
-  scenarioId: "steady-start",
-  startedAt: new Date().toISOString(),
-  sets: 2,
-  pauses: 1,
-  initialSud: 6,
-  finalSud: 4,
-  events: [
-    {
-      id: "1",
-      createdAt: new Date().toISOString(),
-      type: "set-started",
-      phase: "Desensitization",
-    },
-    {
-      id: "2",
-      createdAt: new Date().toISOString(),
-      type: "sud-recorded",
-      phase: "Desensitization",
-      value: 4,
-    },
-    {
-      id: "3",
-      createdAt: new Date().toISOString(),
-      type: "set-paused",
-      phase: "Desensitization",
-      note: "Trainee paused to orient.",
-    },
-  ],
-};
-
 export default function TelemetryScreen() {
   const [saved, setSaved] = useState<SessionTelemetry[]>([]);
   const [usingPreview, setUsingPreview] = useState(false);
@@ -55,8 +23,8 @@ export default function TelemetryScreen() {
       setUsingPreview(false);
     } catch (error) {
       console.warn(
-        "[telemetry] local load failed; showing preview data",
-        error,
+        "[telemetry] local load failed",
+        error instanceof Error ? error.name : "unknown",
       );
       setSaved([]);
       setUsingPreview(true);
@@ -67,11 +35,10 @@ export default function TelemetryScreen() {
       void load();
     }, [load]),
   );
-  const active = saved[0] ?? sample;
-  const previewMode = usingPreview || saved.length === 0;
-  const summary = summarizeTelemetry(active);
+  const active = saved[0] ?? null;
+  const summary = active ? summarizeTelemetry(active) : null;
   const scenario = SIMULATED_SCENARIOS.find(
-    (item) => item.id === active.scenarioId,
+    (item) => item.id === active?.scenarioId,
   );
 
   return (
@@ -86,13 +53,12 @@ export default function TelemetryScreen() {
           </View>
           <BilateralMark size={44} />
         </View>
-        {previewMode ? (
+        {usingPreview ? (
           <View style={styles.previewBanner}>
-            <Text style={styles.previewTitle}>PREVIEW DATA</Text>
+            <Text style={styles.previewTitle}>LOCAL DATA UNAVAILABLE</Text>
             <Text style={styles.previewBody}>
-              No local telemetry is available, so this screen is showing
-              deterministic training-only example data. It is not a real session
-              result.
+              Saved telemetry could not be read. No sample values are shown; try
+              again when local storage is available.
             </Text>
           </View>
         ) : null}
@@ -104,33 +70,35 @@ export default function TelemetryScreen() {
           <View>
             <View style={styles.metrics}>
               <Card>
-                <Metric value={String(summary.sets)} label="sets" />
+                <Metric value={summary ? String(summary.sets) : "—"} label="sets" />
               </Card>
               <Card>
-                <Metric value={String(summary.pauses)} label="pauses" />
+                <Metric value={summary ? String(summary.pauses) : "—"} label="pauses" />
               </Card>
               <Card>
                 <Metric
                   value={
-                    summary.sudChange === null
+                    !summary ||
+                    summary.sudChange === null ||
+                    summary.sudChange === undefined
                       ? "—"
-                      : `${summary.sudChange > 0 ? "↓ " : ""}${summary.sudChange}`
+                      : `${summary.sudChange}`
                   }
-                  label="SUD change"
+                  label="self-report difference"
                 />
               </Card>
             </View>
             <Card>
               <Text style={styles.cardTitle}>Event trail</Text>
-              {saved.length === 0 ? (
+              {!active ? (
                 <Text style={styles.body}>
-                  No persisted live telemetry yet. This preview shows the shape
-                  of a training event trail.
+                  No saved session telemetry yet. This screen only displays
+                  records stored locally on this device.
                 </Text>
               ) : null}
-              {active.events.map((event, index) => (
+              {(active?.events ?? []).map((event, index) => (
                 <View key={event.id}>
-                  {isNewTelemetryPhase(active.events, index) ? (
+                  {active && isNewTelemetryPhase(active.events, index) ? (
                     <Text style={styles.phaseHeading}>{event.phase}</Text>
                   ) : null}
                   <View style={styles.event}>
@@ -155,7 +123,7 @@ export default function TelemetryScreen() {
         </FeatureGate>
         <Card tint={DS.lavender}>
           <Text style={styles.cardTitle}>Teaching reflection</Text>
-          {scenario ? (
+          {scenario && active ? (
             <>
               <Text style={styles.scenarioLabel}>
                 CASE · {scenario.name.toUpperCase()}

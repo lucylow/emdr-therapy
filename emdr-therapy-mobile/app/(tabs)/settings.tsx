@@ -179,7 +179,7 @@ export default function SettingsScreen() {
         <View style={styles.card}>
           <Row
             title="Local-first storage"
-            body="Journal entries, breathing practices, and session summaries remain on this device."
+            body="Saved data stays in device AsyncStorage. This app does not encrypt it; avoid detailed trauma notes or identifiers."
           >
             <Text style={styles.status}>ON</Text>
           </Row>

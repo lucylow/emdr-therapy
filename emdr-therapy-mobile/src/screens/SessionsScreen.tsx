@@ -6,7 +6,8 @@ import { TopStatusBar } from "../components/navigation/TopStatusBar";
 import { ScreenHeader } from "../components/ui/ScreenHeader";
 import { Chip } from "../components/ui/Chip";
 import { SessionCard } from "../components/sessions/SessionCard";
-import { SESSIONS, type SessionCategory } from "../data/mock";
+import { MOCK_DATA_NOTICE, SESSIONS, type SessionCategory } from "../data/mock";
+import { AppText } from "../components/ui/AppText";
 import { colors, spacing } from "../theme/tokens";
 
 const categories: Array<"All" | SessionCategory> = [
@@ -40,6 +41,7 @@ export function SessionsScreen() {
           title="Choose what fits this moment."
           description="Explore short, calm experiences with adjustable audio and visual preferences."
         />
+        <AppText variant="caption" muted>{MOCK_DATA_NOTICE}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

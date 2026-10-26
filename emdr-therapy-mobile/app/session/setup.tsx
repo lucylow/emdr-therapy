@@ -27,12 +27,34 @@ const C = {
   coral: "#B84C4C",
 };
 export default function SetupScreen() {
-  const { scenarioId, scenarioName } = useLocalSearchParams<{
+  const {
+    scenarioId,
+    scenarioName,
+    mode: initialMode,
+    duration: initialDuration,
+  } = useLocalSearchParams<{
     scenarioId?: string;
     scenarioName?: string;
+    mode?: string;
+    duration?: string;
   }>();
-  const [duration, setDuration] = React.useState(10);
-  const [mode, setMode] = React.useState<BlsMode>("visual");
+  const parsedDuration = Number(initialDuration);
+  const initialDurationMinutes =
+    Number.isInteger(parsedDuration) && parsedDuration >= 1 && parsedDuration <= 90
+      ? parsedDuration
+      : 10;
+  const [duration, setDuration] = React.useState(initialDurationMinutes);
+  const durationOptions = Array.from(new Set([5, 10, 15, duration])).sort(
+    (left, right) => left - right,
+  );
+  const [mode, setMode] = React.useState<BlsMode>(() =>
+    initialMode === "audio" ||
+    initialMode === "haptic" ||
+    initialMode === "mixed" ||
+    initialMode === "visual"
+      ? initialMode
+      : "visual",
+  );
   const [continuing, setContinuing] = React.useState(false);
   const continueToPreparation = () => {
     if (continuing) return;
@@ -50,9 +72,21 @@ export default function SetupScreen() {
   };
   const modes: { id: BlsMode; title: string; body: string }[] = [
     { id: "visual", title: "Visual", body: "A gentle moving dot" },
-    { id: "audio", title: "Audio", body: "Alternating sound cues" },
-    { id: "haptic", title: "Haptic", body: "Soft device pulses" },
-    { id: "mixed", title: "Mixed", body: "A combination of cues" },
+    {
+      id: "audio",
+      title: "Audio",
+      body: "Moving dot + alternating stereo cues",
+    },
+    {
+      id: "haptic",
+      title: "Haptic",
+      body: "Moving dot + gentle device pulses",
+    },
+    {
+      id: "mixed",
+      title: "Mixed",
+      body: "Moving dot, audio, and gentle pulses",
+    },
   ];
   return (
     <ScreenContainer containerClassName="bg-[#F4F7F5]" className="px-5 pt-4">
@@ -79,7 +113,7 @@ export default function SetupScreen() {
         ) : null}
         <Text style={styles.label}>Session length</Text>
         <View style={styles.row}>
-          {[5, 10, 15].map((value) => (
+          {durationOptions.map((value) => (
             <Pressable
               key={value}
               accessibilityRole="radio"
@@ -129,8 +163,9 @@ export default function SetupScreen() {
         <View style={styles.safety}>
           <Text style={styles.safetyTitle}>Before you begin</Text>
           <Text style={styles.safetyBody}>
-            For trauma processing, use this with guidance from a qualified EMDR
-            therapist. Choose grounding instead if you feel activated or unsafe.
+            This prototype does not diagnose or replace licensed EMDR care. Do
+            not use it for unsupervised trauma processing. Choose grounding and
+            contact a qualified clinician if you feel uncomfortable or unsafe.
           </Text>
         </View>
         <View style={styles.audioNote}>

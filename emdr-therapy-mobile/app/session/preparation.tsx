@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -19,6 +19,7 @@ export default function PreparationScreen() {
   const rightPlayer = useAudioPlayer(
     require("../../assets/sounds/cue_right.wav"),
   );
+  const stereoTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [audioCheck, setAudioCheck] = useState<
     "idle" | "left" | "right" | "stereo" | "failed"
   >("idle");
@@ -34,6 +35,14 @@ export default function PreparationScreen() {
   );
   const audioRequested =
     sessionParams.mode === "audio" || sessionParams.mode === "mixed";
+  useEffect(
+    () => () => {
+      if (stereoTimeout.current) clearTimeout(stereoTimeout.current);
+      leftPlayer.pause();
+      rightPlayer.pause();
+    },
+    [leftPlayer, rightPlayer],
+  );
   useEffect(() => {
     let active = true;
     void getPreferences()
@@ -58,6 +67,9 @@ export default function PreparationScreen() {
 
   const checkCue = async (side: "left" | "right") => {
     try {
+      if (stereoTimeout.current) clearTimeout(stereoTimeout.current);
+      leftPlayer.pause();
+      rightPlayer.pause();
       await setAudioModeAsync({ playsInSilentMode: true });
       const player = side === "left" ? leftPlayer : rightPlayer;
       player.seekTo(0);
@@ -73,13 +85,16 @@ export default function PreparationScreen() {
 
   const checkStereo = async () => {
     try {
+      if (stereoTimeout.current) clearTimeout(stereoTimeout.current);
+      leftPlayer.pause();
+      rightPlayer.pause();
       await setAudioModeAsync({ playsInSilentMode: true });
       leftPlayer.seekTo(0);
       leftPlayer.volume = 0.45;
       leftPlayer.play();
       setAudioCheck("stereo");
       setStereoFeedback(null);
-      setTimeout(() => {
+      stereoTimeout.current = setTimeout(() => {
         try {
           rightPlayer.seekTo(0);
           rightPlayer.volume = 0.45;
@@ -104,17 +119,15 @@ export default function PreparationScreen() {
         </View>
         <Text style={styles.eyebrow}>PHASE 2 · PREPARATION</Text>
         <Text style={styles.heading}>
-          Find a place inside that feels steady.
+          Choose what feels comfortable to notice.
         </Text>
         <Text style={styles.body}>
-          Bring to mind a calm or safe place. It can be real or imagined. Notice
-          one detail you can see, hear, or feel.
+          You might notice a neutral object or sound around you. Body or breath focus is optional; skip it if it does not feel helpful.
         </Text>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>A gentle check-in</Text>
           <Text style={styles.cardBody}>
-            Are you somewhere private enough to pause if needed? Do you feel
-            supported enough to continue?
+            Is there enough privacy to pause? Is there support you would want nearby? You can stop here; this screen cannot assess readiness.
           </Text>
         </View>
         <View
@@ -162,6 +175,11 @@ export default function PreparationScreen() {
             ))}
           </View>
         </View>
+        <View style={styles.clinicianNote}>
+          <Text style={styles.cardBody}>
+            If you are working with an EMDR clinician, use the sensory preferences and pause plan you have discussed together. This app does not provide EMDR therapy.
+          </Text>
+        </View>
         {audioRequested ? (
           <View
             accessible
@@ -182,9 +200,10 @@ export default function PreparationScreen() {
           >
             <Text style={styles.cardTitle}>Optional audio check</Text>
             <Text style={styles.cardBody}>
-              Use a low, comfortable volume. The app caps cue volume at a
-              conservative ceiling. If headphones or Bluetooth disconnect, audio
-              may stop; visual BLS remains available.
+            Use a low, comfortable volume. The app caps cue volume at a
+            conservative ceiling. Use stereo headphones for left/right channel
+            separation; speakers or mono routing may play both channels
+            together. Visual cues remain available.
             </Text>
             <View style={styles.audioButtons}>
               <Pressable
@@ -366,6 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   cardBody: { color: "#60716F", fontSize: 13, lineHeight: 19 },
+  clinicianNote: { backgroundColor: "#F3F7F5", borderWidth: 1, borderColor: "#D9E2DE", borderRadius: 14, padding: 13 },
   pausePlan: {
     backgroundColor: "#FFFFFF",
     borderRadius: 18,

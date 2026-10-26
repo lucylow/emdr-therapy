@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { STORAGE_KEYS as APP_STORAGE_KEYS } from "../src/services/storage/storage";
+import { clearStoredAuthData } from "./_core/auth";
 import type { SubscriptionTier } from "./monetization";
 import type { SessionTelemetry, TelemetryEvent } from "./telemetry";
 
@@ -8,8 +10,8 @@ export type SessionSummary = {
   createdAt: string;
   durationMinutes: number;
   mode: BlsMode;
-  initialSud: number;
-  finalSud: number;
+  initialSud?: number;
+  finalSud?: number;
   reflection?: string;
 };
 export type JournalEntry = { id: string; createdAt: string; text: string };
@@ -257,8 +259,10 @@ function isSessionSummary(value: unknown): value is SessionSummary {
       value.mode === "audio" ||
       value.mode === "haptic" ||
       value.mode === "mixed") &&
-    boundedInteger(value.initialSud, 0, 10) !== undefined &&
-    boundedInteger(value.finalSud, 0, 10) !== undefined
+    (value.initialSud === undefined ||
+      boundedInteger(value.initialSud, 0, 10) !== undefined) &&
+    (value.finalSud === undefined ||
+      boundedInteger(value.finalSud, 0, 10) !== undefined)
   );
 }
 
@@ -556,6 +560,16 @@ export async function saveJournalEntry(
     : null;
 }
 
+export async function deleteJournalEntry(id: string): Promise<boolean> {
+  if (!id) return false;
+  const result = await readArrayWithStatus(JOURNAL_KEY, isJournalEntry);
+  // Do not risk replacing the journal with an empty fallback after a read error.
+  if (result.usedFallback) return false;
+  const remaining = result.value.filter((entry) => entry.id !== id);
+  if (remaining.length === result.value.length) return false;
+  return writeJson(JOURNAL_KEY, remaining);
+}
+
 export async function getBreathingPractices(): Promise<BreathingPractice[]> {
   return readArray(BREATHING_KEY, isBreathingPractice);
 }
@@ -737,8 +751,9 @@ export async function clearAllLocalData(): Promise<boolean> {
       BREATHING_KEY,
       TELEMETRY_KEY,
       RECOVERY_AUDIT_KEY,
+      ...Object.values(APP_STORAGE_KEYS),
     ]);
-    return true;
+    return clearStoredAuthData();
   } catch (error) {
     reportStorageFailure("clear", "all", error);
     return false;

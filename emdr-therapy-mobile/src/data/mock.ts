@@ -43,12 +43,15 @@ export interface AudioTrack {
 }
 
 export const USER_PROFILE = {
-  id: "alex-morgan",
-  name: "Alex Morgan",
+  id: "demo-profile",
+  name: "Demo User",
   reminderEnabled: true,
   reminderTime: "8:00 PM",
   defaultDuration: 12,
 };
+
+export const MOCK_DATA_NOTICE =
+  "Sample data for preview only. These examples are fictional, are not personal records, and do not show clinical outcomes.";
 
 export const SESSIONS: Session[] = [
   {
@@ -140,6 +143,74 @@ export const SESSIONS: Session[] = [
     categories: ["Short", "Relax", "Visual"],
     audioTrack: "silence",
   },
+  {
+    id: "room-to-pause",
+    title: "Room to Pause",
+    duration: 6,
+    format: "Visual",
+    description: "A short visual-only practice with an easy stop point.",
+    intensity: "Low",
+    categories: ["Short", "Focus", "Visual"],
+    audioTrack: "silence",
+  },
+  {
+    id: "quiet-moment",
+    title: "Quiet Moment",
+    duration: 5,
+    format: "Reflection",
+    description: "A brief pause with no required writing or check-in.",
+    intensity: "Low",
+    categories: ["Short", "Reflection"],
+  },
+  {
+    id: "soft-sound-option",
+    title: "Soft Sound Option",
+    duration: 8,
+    format: "Audio",
+    description: "A low-volume audio option that can be turned off at any time.",
+    intensity: "Low",
+    categories: ["Short", "Audio"],
+    audioTrack: "soft-focus",
+  },
+  {
+    id: "visual-only-pause",
+    title: "Visual-Only Pause",
+    duration: 7,
+    format: "Visual",
+    description: "A short visual practice without audio or haptic cues.",
+    intensity: "Low",
+    categories: ["Short", "Visual", "Focus"],
+    audioTrack: "silence",
+  },
+  {
+    id: "open-reflection",
+    title: "Open Reflection",
+    duration: 10,
+    format: "Reflection",
+    description: "An optional quiet interval; sharing or writing is not required.",
+    intensity: "Low",
+    categories: ["Reflection", "Relax"],
+  },
+  {
+    id: "easy-evening",
+    title: "Easy Evening",
+    duration: 11,
+    format: "Audio + Visual",
+    description: "A brief evening practice with independently optional audio.",
+    intensity: "Low",
+    categories: ["Relax", "Audio", "Visual", "Combined"],
+    audioTrack: "gentle-ambient",
+  },
+  {
+    id: "short-choice",
+    title: "Short Choice",
+    duration: 4,
+    format: "Visual",
+    description: "A very short preview practice. Stop whenever you choose.",
+    intensity: "Low",
+    categories: ["Short", "Visual"],
+    audioTrack: "silence",
+  },
 ];
 
 export const AUDIO_TRACKS: AudioTrack[] = [
@@ -159,6 +230,9 @@ export const AUDIO_TRACKS: AudioTrack[] = [
   },
   { id: "focus-cue", title: "Focus Cue", duration: 720, type: "Focus Cue" },
   { id: "silence", title: "Silence", duration: 720, type: "Silence" },
+  { id: "soft-wind", title: "Soft Wind", duration: 660, type: "Ambient" },
+  { id: "quiet-room", title: "Quiet Room", duration: 480, type: "Silence" },
+  { id: "brief-orientation", title: "Brief Orientation", duration: 300, type: "Guided Voice" },
 ];
 
 export const REFLECTIONS: Reflection[] = [
@@ -196,6 +270,42 @@ export const REFLECTIONS: Reflection[] = [
     createdAt: "2026-09-24T21:22:00-04:00",
     moodBefore: 4,
     moodAfter: 6,
+  },
+  {
+    id: "r5",
+    sessionId: "room-to-pause",
+    sessionTitle: "Room to Pause",
+    createdAt: "2026-10-01T19:10:00-04:00",
+    moodBefore: 5,
+    moodAfter: 5,
+    text: "Sample note: I chose the visual-only option.",
+  },
+  {
+    id: "r6",
+    sessionId: "quiet-moment",
+    sessionTitle: "Quiet Moment",
+    createdAt: "2026-10-02T12:05:00-04:00",
+    moodBefore: 6,
+    moodAfter: 4,
+    text: "Sample note: I stopped early and took a break.",
+  },
+  {
+    id: "r7",
+    sessionId: "visual-only-pause",
+    sessionTitle: "Visual-Only Pause",
+    createdAt: "2026-10-04T18:25:00-04:00",
+    moodBefore: 5,
+    moodAfter: 5,
+    text: "Sample note: I preferred no sound today.",
+  },
+  {
+    id: "r8",
+    sessionId: "open-reflection",
+    sessionTitle: "Open Reflection",
+    createdAt: "2026-10-06T08:40:00-04:00",
+    moodBefore: 4,
+    moodAfter: 6,
+    text: "Sample note: I left the reflection blank.",
   },
 ];
 

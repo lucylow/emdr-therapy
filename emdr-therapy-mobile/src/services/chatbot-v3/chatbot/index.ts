@@ -1,0 +1,70 @@
+export { createEmdrChatbot, EmDrChatbot } from './orchestrator.ts';
+export type { ChatbotOptions } from './orchestrator.ts';
+export { DEFAULT_CHATBOT_CONFIG, CHATBOT_VERSION, resolveChatbotConfig } from './config.ts';
+export { normalizeChatInput, detectExactChatControl, truncateByCodePoints, countGraphemeApprox } from './normalize.ts';
+export { ChatIntentRouter, routeIntent } from './routing/router.ts';
+export { detectRepairHint, resolveRepairIntent } from './routing/repair.ts';
+export { evaluateChatSafety, safetyResponse } from './safety/policy.ts';
+export { getChatResponse, supportedChatLanguages } from './localization/responses.ts';
+export { getQuickReplies, getQuickReplyById } from './localization/quick-replies.ts';
+export { EphemeralChatSessionStore } from './context/session-store.ts';
+export { summarizeDerivedTurns, formatDerivedSummary } from './context/rolling-summary.ts';
+export { buildProviderMessages, promptHasSystemPolicy, estimatePromptChars } from './generation/prompt-builder.ts';
+export { CORE_SYSTEM_POLICY, CHATBOT_POLICY_VERSION, buildSystemPrompt, profileToPromptPreferences } from './generation/system-prompt.ts';
+export { runProviderSafely, ProviderRunError } from './generation/provider-runner.ts';
+export { guardGeneratedResponse, listOutputGuardRules } from './generation/output-guard.ts';
+export { decideModelRoute, hasPromptOverrideAttempt, listLocalOnlyIntents } from './generation/model-policy.ts';
+export { recommendChatActions, listChatToolDescriptors, isKnownToolId } from './tools/action-recommender.ts';
+export { ActionConfirmationStore } from './tools/confirmation.ts';
+export { DEFAULT_CHAT_CONSENT, normalizeChatConsent, maySendCurrentMessage, maySendConversationHistory, consentSummary } from './privacy/consent.ts';
+export { LocalChatFeedbackCounter, feedbackIssueForText, createFeedbackEvent } from './quality/feedback.ts';
+export { LocalProductTelemetry } from './privacy/telemetry.ts';
+export { evaluateChatRoutes, assertMinimumControlRecall, buildChatEvaluationCases } from './quality/evaluation.ts';
+export { evaluateConfidenceCalibration } from './quality/calibration.ts';
+export { buildRedTeamCases, evaluateRedTeamCases } from './quality/red-team.ts';
+export { reviewPromptAbuseRisk, normalizeAbuseMetric } from './quality/abuse-resistance.ts';
+export { ChatbotController, createChatbotController, ChatRateLimitError, StaleChatTurnError } from './session/controller.ts';
+export { ChatRequestManager } from './session/request-manager.ts';
+export { LocalChatRateLimiter } from './session/rate-limiter.ts';
+export { ConfirmedChatProfile, validateProfile } from './profile/confirmed-profile.ts';
+export { toAssistantBubble } from './client-adapter.ts';
+export type * from './types.ts';
+
+
+export { LocalKnowledgeRetriever, searchLocalKnowledge, DEFAULT_KNOWLEDGE_BASE } from './knowledge/retriever.ts';
+
+export { collectGuardedStream, chunksFromText } from './generation/stream-buffer.ts';
+export { ChatCommandBridge } from './tools/command-bridge.ts';
+export { createConfusionMatrix, formatConfusionMatrix } from './quality/confusion-matrix.ts';
+export { buildKnowledgeEvalCases, evaluateKnowledgeBase } from './quality/knowledge-evaluation.ts';
+
+export { ChatProviderCircuitBreaker } from './generation/circuit-breaker.ts';
+export type { CircuitState, CircuitSnapshot } from './generation/circuit-breaker.ts';
+export { normalizeKnowledgeQuery, queryExpansionScoreBoost } from './knowledge/query-normalization.ts';
+export type { QueryTerms } from './knowledge/query-normalization.ts';
+export { auditKnowledgeBase } from './knowledge/article-audit.ts';
+export type { KnowledgeAuditIssue, KnowledgeAuditReport } from './knowledge/article-audit.ts';
+export { auditRemotePayload } from './privacy/remote-payload-audit.ts';
+export type { RemotePayloadAudit } from './privacy/remote-payload-audit.ts';
+
+export { fitProviderMessages, estimateApproximateTokens, estimateMessagesTokens } from './generation/context-budget.ts';
+export type { ContextBudgetOptions, ContextBudgetResult } from './generation/context-budget.ts';
+export { rerankKnowledgeMatches } from './knowledge/reranker.ts';
+export type { RerankExplanation, RerankResult } from './knowledge/reranker.ts';
+export { analyzeMultiIntent } from './dialogue/multi-intent.ts';
+export type { DetectedIntentSegment, MultiIntentAnalysis } from './dialogue/multi-intent.ts';
+export { buildClarificationPrompt, resolveClarificationAnswer } from './dialogue/clarification.ts';
+export type { ClarificationOption, ClarificationPrompt, ClarificationResolution } from './dialogue/clarification.ts';
+export { DialogueStateTracker } from './dialogue/state-tracker.ts';
+export type { DialogueStatus, DialogueSnapshot, DialogueTrackerOptions } from './dialogue/state-tracker.ts';
+export { applyActionPolicy, actionNeedsExplicitConfirmation } from './tools/action-policy.ts';
+export type { ActionPolicyOptions, ActionPolicyReport } from './tools/action-policy.ts';
+export { buildFeedbackInsights, compareFeedbackSources } from './quality/feedback-insights.ts';
+export type { FeedbackObservation, FeedbackInsight, FeedbackInsightOptions } from './quality/feedback-insights.ts';
+export { evaluateTextPerturbationStability } from './quality/regression-harness.ts';
+export type { RegressionInput, RegressionResult, RegressionReport, PerturbationKind } from './quality/regression-harness.ts';
+export { formatChatDisplayText, splitReadableParagraphs } from './response/formatting.ts';
+export type { FormatChatTextOptions, FormattedChatText } from './response/formatting.ts';
+export { DEFAULT_RETENTION_RULES, decideRetention } from './privacy/retention-policy.ts';
+export type { DataClass, RetentionRule, RetentionDecision, RetentionRequest } from './privacy/retention-policy.ts';
+

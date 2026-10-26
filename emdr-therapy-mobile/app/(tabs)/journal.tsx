@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import { ScreenContainer } from "@/components/screen-container";
@@ -13,6 +13,7 @@ import {
 import {
   getJournalEntriesWithStatus,
   type JournalEntry,
+  deleteJournalEntry,
   saveJournalEntry,
 } from "@/lib/session-store";
 import { haptic } from "@/lib/haptics";
@@ -24,6 +25,10 @@ export default function JournalScreen() {
   const [loadError, setLoadError] = useState(false);
   const [saveError, setSaveError] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryDraft, setSummaryDraft] = useState("");
+  const [shareError, setShareError] = useState(false);
+  const [deleteError, setDeleteError] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -63,6 +68,34 @@ export default function JournalScreen() {
     }
   };
 
+  const shareSummary = async () => {
+    const message = summaryDraft.trim();
+    if (!message) return;
+    setShareError(false);
+    try {
+      await Share.share({ message });
+    } catch (error) {
+      console.warn("[journal] share sheet failed", error instanceof Error ? error.name : "unknown");
+      setShareError(true);
+    }
+  };
+
+  const confirmDeleteEntry = (id: string) => Alert.alert(
+    "Delete this reflection?",
+    "This removes the app-managed journal entry from this device. Copies outside the app or in device backups may not be removed.",
+    [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: () => {
+        void deleteJournalEntry(id).then((deleted) => {
+          if (deleted) {
+            setEntries((previous) => previous.filter((entry) => entry.id !== id));
+            setDeleteError(false);
+          } else setDeleteError(true);
+        }).catch(() => setDeleteError(true));
+      } },
+    ],
+  );
+
   return (
     <ScreenContainer containerClassName="bg-[#F4F7F5]" className="px-5 pt-4">
       <ScrollView contentContainerStyle={styles.content}>
@@ -76,8 +109,7 @@ export default function JournalScreen() {
           <BilateralMark size={44} />
         </View>
         <Text style={styles.sub}>
-          Write only what feels useful. Your entries stay on this device in this
-          prototype.
+          Write only what feels useful. Entries are stored on this device in unencrypted app storage in this prototype. Avoid identifiers or details you do not want exposed.
         </Text>
         {loadError ? (
           <LocalDataStatus
@@ -134,10 +166,32 @@ export default function JournalScreen() {
                   {new Date(entry.createdAt).toLocaleDateString()}
                 </Text>
                 <Text style={styles.entryText}>{entry.text}</Text>
+                <Pressable accessibilityRole="button" accessibilityLabel="Delete this reflection" onPress={() => confirmDeleteEntry(entry.id)} style={styles.deleteEntry}><Text style={styles.deleteEntryText}>Delete reflection</Text></Pressable>
               </View>
             ))}
+            {deleteError ? <Text accessibilityRole="alert" style={styles.saveError}>This reflection could not be deleted. Your other entries were not changed; try again.</Text> : null}
           </>
         ) : null}
+        <Card tint={DS.lavender}>
+          <Text style={styles.section}>A summary you control</Text>
+          <Text style={styles.noteText}>Nothing is generated from your journal. Write only what you choose to share. Review the exact text before opening your device’s share sheet.</Text>
+          {!summaryOpen ? (
+            <Pressable accessibilityRole="button" onPress={() => { setSummaryDraft(""); setSummaryOpen(true); }} style={styles.summaryAction}>
+              <Text style={styles.summaryActionText}>Write a shareable summary</Text>
+            </Pressable>
+          ) : (
+            <>
+              <TextInput multiline value={summaryDraft} onChangeText={setSummaryDraft} placeholder="Write a brief note in your own words…" placeholderTextColor="#9AA9A5" accessibilityLabel="Editable summary to share" style={[styles.input, styles.summaryInput]} textAlignVertical="top" />
+              {shareError ? <Text accessibilityRole="alert" style={styles.saveError}>Could not open sharing. Your draft remains on screen.</Text> : null}
+              <Pressable accessibilityRole="button" disabled={!summaryDraft.trim()} onPress={() => void shareSummary()} style={[styles.summaryAction, !summaryDraft.trim() && styles.disabled]}>
+                <Text style={styles.summaryActionText}>Review and choose where to share</Text>
+              </Pressable>
+              <Pressable accessibilityRole="button" onPress={() => { setSummaryOpen(false); setSummaryDraft(""); setShareError(false); }} style={styles.cancelSummary}>
+                <Text style={styles.cancelSummaryText}>Discard summary</Text>
+              </Pressable>
+            </>
+          )}
+        </Card>
         <View style={styles.note}>
           <Text style={styles.noteText}>
             If writing brings up more than you can hold, pause and use grounding
@@ -199,6 +253,8 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   entryText: { color: DS.ink, fontSize: 14, lineHeight: 20 },
+  deleteEntry: { minHeight: 44, justifyContent: "center", alignSelf: "flex-start", paddingHorizontal: 4, marginTop: 6 },
+  deleteEntryText: { color: "#8A3B34", fontSize: 12, fontWeight: "700" },
   error: {
     backgroundColor: "#FFF7E9",
     borderRadius: 16,
@@ -220,6 +276,12 @@ const styles = StyleSheet.create({
     marginTop: 9,
   },
   saveError: { color: "#9B5A34", fontSize: 12, lineHeight: 17 },
+  summaryInput: { minHeight: 110, backgroundColor: DS.surface, marginTop: 12 },
+  summaryAction: { minHeight: 46, justifyContent: "center", alignItems: "center", paddingHorizontal: 14, borderRadius: 14, backgroundColor: DS.deep, marginTop: 12 },
+  summaryActionText: { color: "#FFFFFF", fontSize: 13, fontWeight: "700", textAlign: "center" },
+  disabled: { opacity: 0.5 },
+  cancelSummary: { minHeight: 44, alignItems: "center", justifyContent: "center", marginTop: 4 },
+  cancelSummaryText: { color: DS.deep, fontSize: 12, fontWeight: "700" },
   note: { backgroundColor: DS.lavender, borderRadius: 14, padding: 13 },
   noteText: {
     color: DS.muted,

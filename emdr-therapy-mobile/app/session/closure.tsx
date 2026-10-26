@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { router, useLocalSearchParams } from "expo-router";
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { LocalDataStatus } from "@/components/local-data-status";
 import {
@@ -22,7 +29,7 @@ export default function ClosureScreen() {
     scenarioId?: string;
     scenarioName?: string;
   }>();
-  const [finalSud, setFinalSud] = useState(3);
+  const [finalSud, setFinalSud] = useState<number | null>(null);
   const [reflection, setReflection] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -47,15 +54,17 @@ export default function ClosureScreen() {
         });
         if (!stopped)
           throw new Error("closure stop event was not acknowledged");
-        const sudRecorded = await appendTelemetryEvent(params.sessionId, {
-          id: `${params.sessionId}_sud_${Date.now()}`,
-          createdAt: now,
-          type: "sud-recorded",
-          phase: "Closure",
-          value: finalSud,
-        });
-        if (!sudRecorded)
-          throw new Error("closure SUD event was not acknowledged");
+        if (finalSud !== null) {
+          const sudRecorded = await appendTelemetryEvent(params.sessionId, {
+            id: `${params.sessionId}_sud_${Date.now()}`,
+            createdAt: now,
+            type: "sud-recorded",
+            phase: "Closure",
+            value: finalSud,
+          });
+          if (!sudRecorded)
+            throw new Error("closure check-in was not acknowledged");
+        }
       }
       const savedLocally = await saveSession({
         id: params.sessionId
@@ -68,8 +77,10 @@ export default function ClosureScreen() {
           | "audio"
           | "haptic"
           | "mixed",
-        initialSud: Number(params.sud || 0),
-        finalSud,
+        ...(params.sud !== undefined
+          ? { initialSud: Number(params.sud) }
+          : {}),
+        ...(finalSud !== null ? { finalSud } : {}),
         reflection: reflection.trim() || undefined,
       });
       if (!savedLocally)
@@ -90,7 +101,10 @@ export default function ClosureScreen() {
       containerClassName="bg-[#F4F7F5]"
       className="px-5 pt-4"
     >
-      <View style={styles.content}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.content}
+      >
         <SessionWizardProgress active={3} />
         <View style={styles.header}>
           <View>
@@ -111,30 +125,48 @@ export default function ClosureScreen() {
             <Text style={styles.cueText}>{scenario.teachingNote}</Text>
           </View>
         ) : null}
-        <Text style={styles.label}>Where is your SUD now? {finalSud}/10</Text>
-        <View style={styles.scale}>
-          {Array.from({ length: 11 }, (_, i) => (
-            <Pressable
-              key={i}
-              accessibilityRole="radio"
-              accessibilityLabel={`Final SUD ${i} of 10`}
-              accessibilityState={{ selected: finalSud === i }}
-              onPress={() => {
-                haptic.light();
-                setFinalSud(i);
-              }}
-              style={[styles.scaleDot, finalSud === i && styles.selected]}
-            >
-              <Text
-                style={[
-                  styles.scaleText,
-                  finalSud === i && styles.selectedText,
-                ]}
-              >
-                {i}
-              </Text>
-            </Pressable>
-          ))}
+        <Text style={styles.label}>
+          Optional self-rating: {finalSud === null ? "not answered" : `${finalSud}/10`}
+        </Text>
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Optional post-session self-rating from zero to ten"
+        >
+          <ScrollView horizontal showsHorizontalScrollIndicator>
+            <View style={styles.scale}>
+              {Array.from({ length: 11 }, (_, i) => (
+                <Pressable
+                  key={i}
+                  accessibilityRole="radio"
+                  accessibilityLabel={`After-session rating ${i} of 10`}
+                  accessibilityState={{ selected: finalSud === i }}
+                  onPress={() => {
+                    haptic.light();
+                    setFinalSud(i);
+                  }}
+                  style={[styles.scaleDot, finalSud === i && styles.selected]}
+                >
+                  <Text
+                    style={[
+                      styles.scaleText,
+                      finalSud === i && styles.selectedText,
+                    ]}
+                  >
+                    {i}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </ScrollView>
+          <Pressable
+            accessibilityRole="radio"
+            accessibilityLabel="Skip the optional after-session rating"
+            accessibilityState={{ selected: finalSud === null }}
+            onPress={() => setFinalSud(null)}
+            style={[styles.skipRating, finalSud === null && styles.skipRatingActive]}
+          >
+            <Text style={styles.skipText}>Prefer not to rate</Text>
+          </Pressable>
         </View>
         <Text style={styles.label}>Optional reflection</Text>
         <TextInput
@@ -144,11 +176,11 @@ export default function ClosureScreen() {
             setReflection(value);
             setSaveError(false);
           }}
-          placeholder="One thing I noticed…"
+          placeholder="Optional — no trauma details are needed"
           placeholderTextColor="#9AA9A5"
           style={styles.input}
           textAlignVertical="top"
-          accessibilityLabel="Optional closure reflection"
+          accessibilityLabel="Optional closure reflection; no trauma details are needed"
         />
         {saveError ? (
           <LocalDataStatus
@@ -178,13 +210,13 @@ export default function ClosureScreen() {
         >
           <Text style={styles.home}>Return home</Text>
         </Pressable>
-      </View>
+      </ScrollView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { flex: 1, gap: 14 },
+  content: { gap: 14, paddingBottom: 36 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -208,16 +240,16 @@ const styles = StyleSheet.create({
   label: { color: DS.ink, fontSize: 14, fontWeight: "700", marginTop: 5 },
   scale: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 10,
+    gap: 4,
+    padding: 6,
     backgroundColor: DS.surface,
     borderWidth: 1,
     borderColor: DS.line,
     borderRadius: 16,
   },
   scaleDot: {
-    width: 25,
-    height: 25,
+    width: 44,
+    minHeight: 44,
     borderRadius: 13,
     justifyContent: "center",
     alignItems: "center",
@@ -225,6 +257,19 @@ const styles = StyleSheet.create({
   selected: { backgroundColor: DS.deep },
   scaleText: { color: DS.muted, fontSize: 12 },
   selectedText: { color: "#FFFFFF", fontWeight: "700" },
+  skipRating: {
+    minHeight: 44,
+    alignSelf: "flex-start",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: DS.line,
+    backgroundColor: DS.surface,
+  },
+  skipRatingActive: { borderColor: DS.deep, backgroundColor: DS.mint },
+  skipText: { color: DS.ink, fontSize: 13, fontWeight: "700" },
   input: {
     minHeight: 130,
     backgroundColor: DS.surface,

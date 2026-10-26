@@ -5,7 +5,8 @@ import { BackHeader } from "../components/ui/BackHeader";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Card } from "../components/ui/Card";
 import { SessionRow } from "../components/home/SessionRow";
-import { SESSIONS } from "../data/mock";
+import { MOCK_DATA_NOTICE, SESSIONS } from "../data/mock";
+import { AppText } from "../components/ui/AppText";
 import { colors } from "../theme/tokens";
 
 export function HistoryScreen() {
@@ -14,6 +15,7 @@ export function HistoryScreen() {
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <BackHeader title="History" />
+      <AppText variant="caption" muted style={{ marginVertical: 10 }}>{MOCK_DATA_NOTICE}</AppText>
       {completed.length === 0 ? (
         <EmptyState
           title="Your history starts here."

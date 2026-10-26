@@ -11,6 +11,9 @@ import {
   getBlsAudioStatusLabel,
   getBlsAudioVolumeLabel,
   getBlsCueIntervalMs,
+  getBlsSessionDurationSeconds,
+  getNextBlsCueSide,
+  clampBlsElapsedSeconds,
   isBlsAudioVolume,
 } from "../lib/bls-audio";
 
@@ -128,6 +131,25 @@ describe("session flow contracts", () => {
         volume: 0.25,
       }),
     ).toBe("Audio cues enabled at low volume, currently playing.");
+  });
+
+  it("alternates cue sides deterministically and clamps elapsed time to duration", () => {
+    expect(getNextBlsCueSide("left")).toBe("right");
+    expect(getNextBlsCueSide("right")).toBe("left");
+    expect(getBlsSessionDurationSeconds(5)).toBe(300);
+    expect(getBlsSessionDurationSeconds(999)).toBe(5_400);
+    expect(clampBlsElapsedSeconds(321, 300)).toBe(300);
+    expect(clampBlsElapsedSeconds(-4, 300)).toBe(0);
+  });
+
+  it("preserves skipped self-ratings and clamps elapsed route progress", () => {
+    expect(normalizeSessionParams({ duration: "5" })).not.toHaveProperty("sud");
+    expect(
+      normalizeSessionParams({ duration: "5", elapsedSeconds: "900" }),
+    ).toMatchObject({ duration: "5", elapsedSeconds: "300" });
+    expect(
+      carrySessionParams({ duration: "5", mode: "visual" }),
+    ).not.toHaveProperty("sud");
   });
 
   it("removes empty route values instead of leaking blank state into a later phase", () => {

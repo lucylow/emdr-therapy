@@ -1,13 +1,12 @@
 import React, { useMemo, useState } from "react";
-import { Alert, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BackHeader } from "../components/ui/BackHeader";
 import { AppText } from "../components/ui/AppText";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { SessionMeta } from "../components/session/SessionMeta";
-import { VisualSettingsPanel } from "../components/session/VisualSettingsPanel";
-import { colors, spacing } from "../theme/tokens";
+import { colors } from "../theme/tokens";
 import { SESSIONS } from "../data/mock";
 
 export function SessionDetailScreen() {
@@ -18,20 +17,16 @@ export function SessionDetailScreen() {
     [id],
   );
   const [audio, setAudio] = useState(true);
-  const [visual, setVisual] = useState(true);
-  const [mode, setMode] = useState<
-    "soft-orb" | "horizontal-line" | "minimal-dot"
-  >("soft-orb");
-
   const begin = () => {
-    if (!audio && !visual) {
-      Alert.alert(
-        "Choose one experience",
-        "Turn on audio or visual guidance before starting.",
-      );
-      return;
-    }
-    router.push(`/session/active?sessionId=${session.id}`);
+    router.push({
+      pathname: "/session/setup",
+      params: {
+        scenarioId: "steady-start",
+        scenarioName: session.title,
+        duration: String(session.duration),
+        mode: audio ? "audio" : "visual",
+      },
+    });
   };
 
   return (
@@ -57,33 +52,24 @@ export function SessionDetailScreen() {
 
       <Card style={{ backgroundColor: colors.graphite }}>
         <AppText variant="h2" style={{ color: colors.white }}>
-          A simple setup.
+          A guided setup.
         </AppText>
         <AppText style={{ color: "#D2D2D6", marginTop: 8 }}>
-          Adjust your experience before you begin. You can pause or exit at any
-          time.
+          The moving visual cue remains available. You may add audio in setup;
+          the guided flow includes optional check-ins and grounding.
         </AppText>
       </Card>
 
       <Card>
         <SettingToggle
-          title="Audio"
-          detail={audio ? "Soft Focus" : "Off"}
+          title="Optional alternating audio"
+          detail={audio ? "On · low-volume stereo cues" : "Off"}
           value={audio}
           onPress={() => setAudio((v) => !v)}
         />
-        <SettingToggle
-          title="Visual cue"
-          detail={visual ? "Enabled" : "Off"}
-          value={visual}
-          onPress={() => setVisual((v) => !v)}
-        />
-        {visual ? (
-          <VisualSettingsPanel enabled={visual} mode={mode} onMode={setMode} />
-        ) : null}
       </Card>
 
-      <Button label="Begin Session" onPress={begin} />
+      <Button label="Continue to guided setup" onPress={begin} />
     </ScrollView>
   );
 }

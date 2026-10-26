@@ -1,6 +1,10 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
-import { SESSION_TOKEN_KEY, USER_INFO_KEY } from "@/constants/oauth";
+import {
+  clearPendingOAuthState,
+  SESSION_TOKEN_KEY,
+  USER_INFO_KEY,
+} from "@/constants/oauth";
 
 export type User = {
   id: number;
@@ -120,5 +124,25 @@ export async function clearUserInfo(): Promise<void> {
     await SecureStore.deleteItemAsync(USER_INFO_KEY);
   } catch (error) {
     reportStorageFailure("clear user", error);
+  }
+}
+
+export async function clearStoredAuthData(): Promise<boolean> {
+  try {
+    if (Platform.OS === "web") {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(USER_INFO_KEY);
+      }
+    } else {
+      await Promise.all([
+        SecureStore.deleteItemAsync(SESSION_TOKEN_KEY),
+        SecureStore.deleteItemAsync(USER_INFO_KEY),
+      ]);
+    }
+    await clearPendingOAuthState();
+    return true;
+  } catch (error) {
+    reportStorageFailure("clear local authentication data", error);
+    return false;
   }
 }

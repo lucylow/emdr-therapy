@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const store = new Map<string, string>();
+const authStorageMock = vi.hoisted(() => ({
+  clearStoredAuthData: vi.fn(async () => true),
+}));
+vi.mock("../lib/_core/auth", () => authStorageMock);
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
     getItem: async (key: string) => store.get(key) ?? null,
@@ -21,6 +25,7 @@ import {
   clearAllLocalData,
   clearRecoveryAudit,
   discardTelemetry,
+  deleteJournalEntry,
   getInterruptedTelemetry,
   getJournalEntries,
   getJournalEntriesWithStatus,
@@ -72,6 +77,7 @@ import {
 describe("local therapy storage", () => {
   beforeEach(() => {
     store.clear();
+    authStorageMock.clearStoredAuthData.mockReset().mockResolvedValue(true);
     setLocalStorageFailureMode(null);
   });
   it("saves and reads a session summary locally", async () => {
@@ -87,12 +93,39 @@ describe("local therapy storage", () => {
     ).resolves.toBe(true);
     await expect(getSessions()).resolves.toHaveLength(1);
   });
+  it("allows a session summary with both optional self-ratings skipped", async () => {
+    await expect(
+      saveSession({
+        id: "s-skipped-checkins",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        durationMinutes: 5,
+        mode: "visual",
+      }),
+    ).resolves.toBe(true);
+    await expect(getSessions()).resolves.toEqual([
+      expect.objectContaining({ id: "s-skipped-checkins" }),
+    ]);
+  });
   it("keeps journal entries newest first", async () => {
     await saveJournalEntry("First note");
     await saveJournalEntry("Second note");
     const entries = await getJournalEntries();
     expect(entries).toHaveLength(2);
     expect(entries[0].text).toBe("Second note");
+  });
+  it("deletes one journal entry and leaves the rest intact", async () => {
+    const entry = await saveJournalEntry("A private note");
+    expect(entry).not.toBeNull();
+    await expect(deleteJournalEntry(entry!.id)).resolves.toBe(true);
+    await expect(getJournalEntries()).resolves.toEqual([]);
+  });
+  it("does not overwrite the journal after a failed read during deletion", async () => {
+    const entry = await saveJournalEntry("Keep this note");
+    expect(entry).not.toBeNull();
+    setLocalStorageFailureMode("read");
+    await expect(deleteJournalEntry(entry!.id)).resolves.toBe(false);
+    setLocalStorageFailureMode(null);
+    await expect(getJournalEntries()).resolves.toHaveLength(1);
   });
   it("merges preferences without removing defaults", async () => {
     await savePreferences({ reducedMotion: true });
@@ -145,11 +178,20 @@ describe("local therapy storage", () => {
   it("clears all local data in one operation", async () => {
     await saveJournalEntry("A note");
     await savePreferences({ reducedMotion: true });
+    store.set("@emdrflow/reflections", JSON.stringify([{ text: "private" }]));
+    store.set("@emdrflow/session_history", JSON.stringify([{ id: "old" }]));
     await clearAllLocalData();
     await expect(getJournalEntries()).resolves.toHaveLength(0);
+    expect(authStorageMock.clearStoredAuthData).toHaveBeenCalledOnce();
+    expect(store.has("@emdrflow/reflections")).toBe(false);
+    expect(store.has("@emdrflow/session_history")).toBe(false);
     await expect(getPreferences()).resolves.toMatchObject({
       reducedMotion: false,
     });
+  });
+  it("reports incomplete deletion when auth storage cannot be cleared", async () => {
+    authStorageMock.clearStoredAuthData.mockResolvedValueOnce(false);
+    await expect(clearAllLocalData()).resolves.toBe(false);
   });
   it("keeps adaptive BLS inside the therapist-configured limit", () => {
     expect(

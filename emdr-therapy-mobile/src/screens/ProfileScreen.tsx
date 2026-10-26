@@ -23,7 +23,7 @@ export function ProfileScreen() {
         <ScreenHeader
           eyebrow="PROFILE"
           title={profileName}
-          description="Your personal space and preferences."
+          description="Fictional demo profile and sample preferences. This is not a real account."
         />
         <Card style={styles.profileCard}>
           <View style={styles.avatar}>
@@ -36,7 +36,7 @@ export function ProfileScreen() {
           <View style={{ flex: 1 }}>
             <AppText variant="h3">{profileName}</AppText>
             <AppText variant="caption" muted style={{ marginTop: 3 }}>
-              Personal space
+              Demo profile · sample data
             </AppText>
           </View>
         </Card>
@@ -106,7 +106,7 @@ export function ProfileScreen() {
         <SettingRow
           icon="refresh-outline"
           title="Reset demo data"
-          subtitle="Restore the representative mock account"
+            subtitle="Restore fictional sample content on this device"
           onPress={() => void resetDemo()}
         />
         <AppText

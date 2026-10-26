@@ -24,11 +24,15 @@ import { getBlsToggleAccessibilityLabel } from "@/lib/bls-accessibility";
 import {
   BLS_AUDIO_VOLUMES,
   BLS_SOUNDSCAPE_OPTIONS,
+  clampBlsElapsedSeconds,
   getBlsAudioVolumeLabel,
   getBlsCueIntervalMs,
+  getBlsSessionDurationSeconds,
+  getNextBlsCueSide,
   getBlsSoundscapeLabel,
   isBlsAudioVolume,
   isBlsSoundscape,
+  type BlsCueSide,
   type BlsAudioVolume,
   type BlsSoundscape,
 } from "@/lib/bls-audio";
@@ -63,8 +67,16 @@ export default function BLSScreen() {
   const sessionId = useRef(
     params.sessionId ?? `training_${Date.now()}`,
   ).current;
+  const sessionDurationSeconds = getBlsSessionDurationSeconds(
+    Number(params.duration),
+  );
   const [running, setRunning] = useState(params.resume !== "true");
-  const [seconds, setSeconds] = useState(Number(params.elapsedSeconds));
+  const [seconds, setSeconds] = useState(() =>
+    clampBlsElapsedSeconds(
+      Number(params.elapsedSeconds),
+      sessionDurationSeconds,
+    ),
+  );
   const [audioOn, setAudioOn] = useState(params.audioOn === "true");
   const [hapticsOn, setHapticsOn] = useState(params.hapticsOn === "true");
   const [speed, setSpeed] = useState<1 | 2 | 3>(
@@ -78,7 +90,15 @@ export default function BLSScreen() {
   const [audioRetrying, setAudioRetrying] = useState(false);
   const [ending, setEnding] = useState(false);
   const [telemetryReady, setTelemetryReady] = useState(false);
+  const [cueSide, setCueSide] = useState<BlsCueSide>("left");
   const x = useRef(new Animated.Value(0)).current;
+  const cueSideRef = useRef<BlsCueSide>("left");
+  const endingRef = useRef(false);
+  const currentSettingsRef = useRef({ audioOn, hapticsOn, speed });
+
+  useEffect(() => {
+    currentSettingsRef.current = { audioOn, hapticsOn, speed };
+  }, [audioOn, hapticsOn, speed]);
 
   const leftPlayer = useAudioPlayer(
     require("../../assets/sounds/cue_left.wav"),
@@ -118,7 +138,7 @@ export default function BLSScreen() {
   const stopNativeStimulation = useCallback(() => {
     setRunning(false);
     x.stopAnimation();
-    x.setValue(0);
+    x.setValue(reducedMotion ? 0.5 : 0);
     try {
       leftPlayer.pause();
       rightPlayer.pause();
@@ -131,7 +151,7 @@ export default function BLSScreen() {
           error instanceof Error ? error.name : "unknown",
         );
     }
-  }, [humPlayer, leftPlayer, rainPlayer, rightPlayer, x]);
+  }, [humPlayer, leftPlayer, rainPlayer, reducedMotion, rightPlayer, x]);
 
   useEffect(() => {
     leftPlayer.volume = audioVolume;
@@ -150,6 +170,9 @@ export default function BLSScreen() {
           setAudioVolume(preferences.blsAudioVolume as BlsAudioVolume);
         if (isBlsSoundscape(preferences.blsSoundscape))
           setSoundscape(preferences.blsSoundscape);
+      }).catch((error) => {
+        if (__DEV__) console.warn("[bls] preferences unavailable", error instanceof Error ? error.name : "unknown");
+        setStorageWarning(true);
       });
       return stopNativeStimulation;
     }, [stopNativeStimulation]),
@@ -169,8 +192,10 @@ export default function BLSScreen() {
       await setAudioModeAsync({ playsInSilentMode: true });
       leftPlayer.volume = audioVolume;
       rightPlayer.volume = audioVolume;
-      leftPlayer.seekTo(0);
-      leftPlayer.play();
+      if (running) {
+        leftPlayer.seekTo(0);
+        leftPlayer.play();
+      }
       setAudioUnavailable(false);
       setAudioOn(true);
     } catch (error) {
@@ -212,13 +237,15 @@ export default function BLSScreen() {
             scenarioName: params.scenarioName,
             pausePlan: params.pausePlan,
             mode: params.mode,
-            audioOn,
-            hapticsOn,
-            speed,
+            audioOn: currentSettingsRef.current.audioOn,
+            hapticsOn: currentSettingsRef.current.hapticsOn,
+            speed: currentSettingsRef.current.speed,
             durationMinutes: Number(params.duration),
             elapsedSeconds: Number(params.elapsedSeconds),
             startedAt: new Date().toISOString(),
-            initialSud: Number(params.sud),
+            ...(params.sud !== undefined
+              ? { initialSud: Number(params.sud) }
+              : {}),
             sets: 1,
             pauses: 0,
             events: [
@@ -284,8 +311,6 @@ export default function BLSScreen() {
       active = false;
     };
   }, [
-    audioOn,
-    hapticsOn,
     params.duration,
     params.elapsedSeconds,
     params.mode,
@@ -295,13 +320,29 @@ export default function BLSScreen() {
     params.scenarioName,
     params.sud,
     sessionId,
-    speed,
   ]);
 
   useEffect(() => {
     if (!running) return;
-    const timer = setInterval(() => setSeconds((value) => value + 1), 1_000);
+    const timer = setInterval(
+      () =>
+        setSeconds((value) =>
+          Math.min(sessionDurationSeconds, value + 1),
+        ),
+      1_000,
+    );
+    return () => clearInterval(timer);
+  }, [running, sessionDurationSeconds]);
+
+  useEffect(() => {
+    if (!running) {
+      x.stopAnimation();
+      return;
+    }
     const cycleMs = getBlsCueIntervalMs(speed);
+    cueSideRef.current = "left";
+    setCueSide("left");
+    x.setValue(reducedMotion ? 0.5 : 0);
     const loop = reducedMotion
       ? null
       : Animated.loop(
@@ -320,20 +361,30 @@ export default function BLSScreen() {
             }),
           ]),
         );
-    const cue = setInterval(() => {
+    const playCue = (side: BlsCueSide) => {
       try {
-        if (audioOn) {
-          const player =
-            Math.floor(Date.now() / cycleMs) % 2 === 0
-              ? leftPlayer
-              : rightPlayer;
-          player.seekTo(0);
-          player.play();
-        }
+        if (!audioOn) return;
+        const player = side === "left" ? leftPlayer : rightPlayer;
+        player.seekTo(0);
+        player.play();
       } catch {
         setAudioUnavailable(true);
         setAudioOn(false);
       }
+    };
+    playCue("left");
+    if (hapticsOn) {
+      try {
+        haptic.light();
+      } catch {
+        // Haptic availability must never interrupt the visual session.
+      }
+    }
+    const cue = setInterval(() => {
+      const nextSide = getNextBlsCueSide(cueSideRef.current);
+      cueSideRef.current = nextSide;
+      setCueSide(nextSide);
+      playCue(nextSide);
       try {
         if (hapticsOn) haptic.light();
       } catch {
@@ -342,9 +393,9 @@ export default function BLSScreen() {
     }, cycleMs);
     loop?.start();
     return () => {
-      clearInterval(timer);
       clearInterval(cue);
       loop?.stop();
+      x.stopAnimation();
     };
   }, [
     audioOn,
@@ -380,17 +431,23 @@ export default function BLSScreen() {
   const persistProgress = useCallback(
     async (event?: Parameters<typeof appendTelemetryEvent>[1]) => {
       if (!telemetryReady) return false;
-      const progressSaved = await updateTelemetryProgress(sessionId, {
-        elapsedSeconds: seconds,
-        audioOn,
-        hapticsOn,
-        speed,
-      });
-      const eventSaved =
-        !event ||
-        (progressSaved && (await appendTelemetryEvent(sessionId, event)));
-      if (!progressSaved || !eventSaved) setStorageWarning(true);
-      return progressSaved && eventSaved;
+      try {
+        const progressSaved = await updateTelemetryProgress(sessionId, {
+          elapsedSeconds: seconds,
+          audioOn,
+          hapticsOn,
+          speed,
+        });
+        const eventSaved =
+          !event ||
+          (progressSaved && (await appendTelemetryEvent(sessionId, event)));
+        if (!progressSaved || !eventSaved) setStorageWarning(true);
+        return progressSaved && eventSaved;
+      } catch (error) {
+        if (__DEV__) console.warn("[bls] telemetry save failed", error instanceof Error ? error.name : "unknown");
+        setStorageWarning(true);
+        return false;
+      }
     },
     [audioOn, hapticsOn, seconds, sessionId, speed, telemetryReady],
   );
@@ -404,6 +461,9 @@ export default function BLSScreen() {
     if (!telemetryReady) return;
     void savePreferences({ blsAudioVolume: audioVolume }).then((saved) => {
       if (!saved) setStorageWarning(true);
+    }).catch((error) => {
+      if (__DEV__) console.warn("[bls] audio preference save failed", error instanceof Error ? error.name : "unknown");
+      setStorageWarning(true);
     });
   }, [audioVolume, telemetryReady]);
 
@@ -411,33 +471,52 @@ export default function BLSScreen() {
     if (!telemetryReady) return;
     void savePreferences({ blsSoundscape: soundscape }).then((saved) => {
       if (!saved) setStorageWarning(true);
+    }).catch((error) => {
+      if (__DEV__) console.warn("[bls] soundscape preference save failed", error instanceof Error ? error.name : "unknown");
+      setStorageWarning(true);
     });
   }, [soundscape, telemetryReady]);
 
-  const groundingParams = {
-    ...params,
-    sessionId,
-    elapsedSeconds: String(seconds),
-    audioOn: String(audioOn),
-    hapticsOn: String(hapticsOn),
-    speed: String(speed),
-  };
+  const groundingParams = useMemo(
+    () => ({
+      ...params,
+      sessionId,
+      elapsedSeconds: String(seconds),
+      audioOn: String(audioOn),
+      hapticsOn: String(hapticsOn),
+      speed: String(speed),
+    }),
+    [audioOn, hapticsOn, params, seconds, sessionId, speed],
+  );
 
-  const stopToGrounding = () => {
-    if (ending) return;
+  const stopToGrounding = useCallback(async (note = "Stopped to grounding") => {
+    if (endingRef.current) return;
+    endingRef.current = true;
     setEnding(true);
     stopNativeStimulation();
-    void persistProgress({
-      id: `${sessionId}_stop_${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      type: "set-stopped",
-      phase: "Processing",
-      note: "Stopped to grounding",
-    });
-    router.replace({ pathname: "/session/grounding", params: groundingParams });
-  };
+    try {
+      await persistProgress({
+        id: `${sessionId}_stop_${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        type: "set-stopped",
+        phase: "Processing",
+        note,
+      });
+    } catch {
+      setStorageWarning(true);
+    } finally {
+      router.replace({ pathname: "/session/grounding", params: groundingParams });
+    }
+  }, [groundingParams, persistProgress, sessionId, stopNativeStimulation]);
+
+  useEffect(() => {
+    if (running && seconds >= sessionDurationSeconds) {
+      void stopToGrounding("Selected session duration reached");
+    }
+  }, [running, seconds, sessionDurationSeconds, stopToGrounding]);
 
   const toggleRunning = () => {
+    if (endingRef.current) return;
     const next = !running;
     if (!next) stopNativeStimulation();
     else setRunning(true);
@@ -450,7 +529,7 @@ export default function BLSScreen() {
   };
 
   const resumeRunning = () => {
-    if (running) return;
+    if (running || endingRef.current) return;
     setRunning(true);
     void persistProgress({
       id: `${sessionId}_resume_${Date.now()}`,
@@ -476,18 +555,18 @@ export default function BLSScreen() {
             accessibilityRole="button"
             accessibilityLabel={
               ending
-                ? "Stopping and opening grounding"
-                : "Stop BLS and open grounding"
+                ? "Stopping stimulation and opening grounding"
+                : "Emergency stop; stop stimulation and open grounding now"
             }
             accessibilityState={{ busy: ending, disabled: ending }}
             disabled={ending}
             hitSlop={12}
-            onPress={stopToGrounding}
+            onPress={() => void stopToGrounding()}
           >
-            <Text style={styles.close}>×</Text>
+            <Text style={styles.emergencyStopText}>Stop now</Text>
           </Pressable>
           <View style={styles.topCenter}>
-            <Text style={styles.phase}>EMDR SESSION</Text>
+            <Text style={styles.phase}>PRACTICE SESSION</Text>
             <Text style={styles.subphase}>
               Processing · set {Math.max(1, Math.floor(seconds / 12) + 1)}
             </Text>
@@ -570,9 +649,15 @@ export default function BLSScreen() {
             <Text style={styles.arrow}>←</Text>
             <Text style={styles.arrow}>→</Text>
           </View>
-          <Text style={styles.timer}>
+          <Text accessibilityLiveRegion="polite" style={styles.timer}>
             {String(Math.floor(seconds / 60)).padStart(2, "0")}:
-            {String(seconds % 60).padStart(2, "0")}
+            {String(seconds % 60).padStart(2, "0")} / {String(Math.floor(sessionDurationSeconds / 60)).padStart(2, "0")}:
+            {String(sessionDurationSeconds % 60).padStart(2, "0")}
+          </Text>
+          <Text style={styles.timerLabel}>Elapsed / selected duration</Text>
+          <Text accessibilityLiveRegion="polite" style={styles.cueStatus}>
+            Alternating cue: {cueSide} side
+            {reducedMotion ? " · movement reduced" : ""}
           </Text>
         </View>
         {storageWarning ? (
@@ -599,6 +684,12 @@ export default function BLSScreen() {
             void retryAudio();
           }}
         />
+        {audioOn ? (
+          <Text style={styles.audioRoutingNote}>
+            Left/right audio separation requires stereo headphones; device
+            speakers may play both channels together.
+          </Text>
+        ) : null}
         <View style={styles.controlRow}>
           <ToggleCard
             label="Audio"
@@ -701,7 +792,8 @@ export default function BLSScreen() {
           </View>
         </View>
         <Text style={styles.footer}>
-          Pause or stop anytime. If you feel overwhelmed, use grounding.
+          Prototype only; not a substitute for licensed EMDR care. Do not use
+          for unsupervised trauma processing. Pause, stop, or ground anytime.
         </Text>
       </ScrollView>
     </ScreenContainer>
@@ -820,12 +912,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
-  close: {
-    color: "#D5E7E1",
-    fontSize: 34,
-    fontWeight: "200",
-    minWidth: 44,
-    textAlign: "left",
+  emergencyStopText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "800",
+    minWidth: 68,
+    minHeight: 44,
+    textAlign: "center",
+    textAlignVertical: "center",
+    backgroundColor: "#8B3B3B",
+    borderRadius: 14,
+    overflow: "hidden",
+    paddingHorizontal: 8,
   },
   settings: {
     color: "#D5E7E1",
@@ -902,7 +1000,26 @@ const styles = StyleSheet.create({
   },
   arrows: { width: 190, flexDirection: "row", justifyContent: "space-between" },
   arrow: { color: "#D5E7E1", fontSize: 28, fontWeight: "300" },
-  timer: { color: "#8FC8BC", fontSize: 13, marginTop: 8 },
+  timer: {
+    color: "#8FC8BC",
+    fontSize: 15,
+    fontVariant: ["tabular-nums"],
+    fontWeight: "700",
+    marginTop: 8,
+  },
+  timerLabel: { color: "#D5E7E1", fontSize: 11, marginTop: 2 },
+  cueStatus: {
+    color: "#D5E7E1",
+    fontSize: 12,
+    marginTop: 7,
+    textAlign: "center",
+  },
+  audioRoutingNote: {
+    color: "#D5E7E1",
+    fontSize: 11,
+    lineHeight: 16,
+    marginTop: 4,
+  },
   controlRow: {
     flexDirection: "row",
     alignItems: "center",

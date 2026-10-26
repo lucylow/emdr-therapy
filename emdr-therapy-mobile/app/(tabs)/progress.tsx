@@ -13,7 +13,6 @@ import {
   Card,
   DS,
   Metric,
-  ProgressLine,
   SectionLabel,
   SegmentedControl,
 } from "@/components/ui/design-system";
@@ -22,25 +21,6 @@ import {
   type BreathingPractice,
   type SessionSummary,
 } from "@/lib/session-store";
-
-const FALLBACK_SESSIONS: SessionSummary[] = [
-  {
-    id: "preview-session",
-    createdAt: "2026-01-01T12:00:00.000Z",
-    durationMinutes: 8,
-    mode: "visual",
-    initialSud: 6,
-    finalSud: 4,
-  },
-];
-const FALLBACK_BREATHING: BreathingPractice[] = [
-  {
-    id: "preview-breathing",
-    createdAt: "2026-01-01T12:10:00.000Z",
-    rounds: 3,
-    durationSeconds: 120,
-  },
-];
 
 export default function ProgressScreen() {
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -51,19 +31,16 @@ export default function ProgressScreen() {
   const load = useCallback(async () => {
     try {
       const activity = await getProgressActivity();
-      const shouldPreview =
-        activity.usedFallback ||
-        (activity.sessions.length === 0 && activity.breathing.length === 0);
-      setSessions(shouldPreview ? FALLBACK_SESSIONS : activity.sessions);
-      setBreathing(shouldPreview ? FALLBACK_BREATHING : activity.breathing);
-      setUsingFallback(shouldPreview);
+      setSessions(activity.sessions);
+      setBreathing(activity.breathing);
+      setUsingFallback(activity.usedFallback);
     } catch (error) {
       console.warn(
-        "[progress] local activity load failed; showing preview data",
-        error,
+        "[progress] local activity load failed",
+        error instanceof Error ? error.name : "unknown",
       );
-      setSessions(FALLBACK_SESSIONS);
-      setBreathing(FALLBACK_BREATHING);
+      setSessions([]);
+      setBreathing([]);
       setUsingFallback(true);
     }
   }, []);
@@ -77,9 +54,16 @@ export default function ProgressScreen() {
     await load();
     setRefreshing(false);
   };
-  const reduction = sessions.length
-    ? sessions.reduce((sum, s) => sum + (s.initialSud - s.finalSud), 0) /
-      sessions.length
+  const ratedSessions = sessions.filter(
+    (session) =>
+      session.initialSud !== undefined && session.finalSud !== undefined,
+  );
+  const reduction = ratedSessions.length
+    ? ratedSessions.reduce(
+        (sum, session) =>
+          sum + (session.initialSud! - session.finalSud!),
+        0,
+      ) / ratedSessions.length
     : null;
   return (
     <ScreenContainer containerClassName="bg-[#F4F7F5]" className="px-5 pt-4">
@@ -103,11 +87,10 @@ export default function ProgressScreen() {
         </View>
         {usingFallback ? (
           <View style={styles.previewBanner}>
-            <Text style={styles.previewTitle}>PREVIEW DATA</Text>
+            <Text style={styles.previewTitle}>LOCAL DATA UNAVAILABLE</Text>
             <Text style={styles.previewBody}>
-              Local activity could not be read, so this screen is showing
-              deterministic training-only examples. These values are not your
-              clinical or session results.
+              Saved activity could not be read. No sample values are shown; try
+              again when local storage is available.
             </Text>
           </View>
         ) : null}
@@ -123,65 +106,37 @@ export default function ProgressScreen() {
         {tab === "overview" ? (
           <>
             <Card>
-              <SectionLabel right="PER MEMORY">SUD reduction</SectionLabel>
+              <SectionLabel right="SELF-REPORT">Paired check-ins</SectionLabel>
               <Text
                 accessibilityRole="text"
                 style={styles.accessibilitySummary}
               >
                 {reduction === null
-                  ? "No session data yet. Complete a session to see local progress trends."
-                  : `Average SUD change is ${reduction.toFixed(1)} points across ${sessions.length} session${sessions.length === 1 ? "" : "s"}.`}
+                  ? "No paired pre/post self-ratings are saved. Check-ins are optional."
+                  : `Average self-reported difference is ${reduction.toFixed(1)} points across ${ratedSessions.length} paired check-in${ratedSessions.length === 1 ? "" : "s"}. This is not a clinical outcome measure.`}
               </Text>
               <View style={styles.reductionRow}>
                 <View>
                   <Text style={styles.big}>
                     {reduction === null ? "—" : `${reduction.toFixed(1)}`}
                   </Text>
-                  <Text style={styles.muted}>average points</Text>
+                  <Text style={styles.muted}>average self-reported difference</Text>
                   <Text style={styles.delta}>
                     {reduction === null
-                      ? "Start with a session to see patterns"
-                      : "A reflection, not a score to chase"}
+                      ? "No rating is required"
+                      : "Personal reflection only; not a score to chase"}
                   </Text>
-                </View>
-                <View style={styles.miniChart}>
-                  <ProgressLine
-                    values={
-                      sessions.length
-                        ? sessions
-                            .slice(0, 7)
-                            .reverse()
-                            .map((s) => s.finalSud)
-                        : [7, 5, 6, 4, 5, 3, 4]
-                    }
-                  />
                 </View>
               </View>
             </Card>
             <Card>
-              <SectionLabel right="THIS MONTH">Session frequency</SectionLabel>
+              <SectionLabel right="ON THIS DEVICE">Saved activity</SectionLabel>
               <View style={styles.frequency}>
                 <Metric
-                  value={sessions.length ? String(sessions.length) : "—"}
-                  label="sessions"
+                  value={String(sessions.length)}
+                  label="practice sessions"
                 />
-                <ProgressLine values={[2, 4, 3, 5, 3, 6, 4]} />
-              </View>
-            </Card>
-            <Card>
-              <SectionLabel right="PHASES">Completion</SectionLabel>
-              <View style={styles.phaseRow}>
-                <View style={styles.ring}>
-                  <Text style={styles.ringText}>
-                    {sessions.length ? "25%" : "—"}
-                  </Text>
-                </View>
-                <View style={{ flex: 1, gap: 9 }}>
-                  <Legend label="Preparation" color="#2F6F68" value="100%" />
-                  <Legend label="Assessment" color="#B8D8D2" value="100%" />
-                  <Legend label="Processing" color="#B97932" value="—" />
-                  <Legend label="Closure" color="#E8E5F2" value="—" />
-                </View>
+                <Metric value={String(breathing.length)} label="breathing practices" />
               </View>
             </Card>
           </>
@@ -197,8 +152,8 @@ export default function ProgressScreen() {
                 {[
                   ...sessions.map((session) => ({
                     id: session.id,
-                    title: "EMDR session",
-                    body: `${session.durationMinutes} min · SUD ${session.initialSud} → ${session.finalSud}`,
+                    title: "Practice session",
+                    body: `${session.durationMinutes} min · Before ${session.initialSud === undefined ? "—" : `${session.initialSud}/10`} · After ${session.finalSud === undefined ? "—" : `${session.finalSud}/10`}`,
                     createdAt: session.createdAt,
                   })),
                   ...breathing.map((practice) => ({
@@ -236,28 +191,11 @@ export default function ProgressScreen() {
         )}
         <View style={styles.disclaimer}>
           <Text style={styles.disclaimerText}>
-            Progress data is stored locally and is not a clinical assessment.
+          Saved data stays on this device. Self-ratings are optional personal reports, not a clinical assessment or treatment outcome.
           </Text>
         </View>
       </ScrollView>
     </ScreenContainer>
-  );
-}
-function Legend({
-  label,
-  color,
-  value,
-}: {
-  label: string;
-  color: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.legend}>
-      <View style={[styles.legendDot, { backgroundColor: color }]} />
-      <Text style={styles.legendLabel}>{label}</Text>
-      <Text style={styles.legendValue}>{value}</Text>
-    </View>
   );
 }
 const styles = StyleSheet.create({
@@ -306,35 +244,12 @@ const styles = StyleSheet.create({
     lineHeight: 16,
     marginTop: 7,
   },
-  miniChart: { flex: 1, marginLeft: 10 },
   frequency: {
     flexDirection: "row",
     alignItems: "center",
     gap: 18,
     marginTop: 9,
   },
-  phaseRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 18,
-    marginTop: 13,
-  },
-  ring: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    borderWidth: 10,
-    borderColor: DS.mint,
-    borderTopColor: DS.deep,
-    borderRightColor: DS.deep,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ringText: { color: DS.ink, fontSize: 20, fontWeight: "700" },
-  legend: { flexDirection: "row", alignItems: "center", gap: 7 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendLabel: { color: DS.muted, fontSize: 12, flex: 1 },
-  legendValue: { color: DS.ink, fontSize: 12, fontWeight: "700" },
   cardTitle: {
     color: DS.ink,
     fontSize: 17,

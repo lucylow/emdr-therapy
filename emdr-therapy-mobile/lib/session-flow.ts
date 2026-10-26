@@ -20,7 +20,6 @@ export type NormalizedSessionFlowParams = Required<
     SessionFlowParams,
     | "duration"
     | "mode"
-    | "sud"
     | "elapsedSeconds"
     | "audioOn"
     | "hapticsOn"
@@ -32,7 +31,6 @@ export type NormalizedSessionFlowParams = Required<
     SessionFlowParams,
     | "duration"
     | "mode"
-    | "sud"
     | "elapsedSeconds"
     | "audioOn"
     | "hapticsOn"
@@ -41,7 +39,6 @@ export type NormalizedSessionFlowParams = Required<
   >;
 
 const MAX_DURATION_MINUTES = 90;
-const MAX_ELAPSED_SECONDS = MAX_DURATION_MINUTES * 60;
 const MAX_ROUTE_TEXT_LENGTH = 120;
 
 function finiteInteger(
@@ -85,6 +82,13 @@ function safeBoolean(value: string | undefined, fallback: boolean): string {
   return String(fallback);
 }
 
+function optionalRating(value: string | undefined): string | undefined {
+  if (value === undefined || value.trim() === "") return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return undefined;
+  return String(Math.min(10, Math.max(0, Math.round(parsed))));
+}
+
 /** Normalizes deep-link and recovery parameters before they reach the BLS session. */
 export function normalizeSessionParams(
   params: SessionFlowParams,
@@ -94,15 +98,16 @@ export function normalizeSessionParams(
     params.elapsedSeconds,
     0,
     0,
-    Math.max(MAX_ELAPSED_SECONDS, duration * 60),
+    duration * 60,
   );
   const speed = finiteInteger(params.speed, 2, 1, 3);
   const mode = safeMode(params.mode);
+  const sud = optionalRating(params.sud);
 
   return {
     duration: String(duration),
     mode,
-    sud: String(finiteInteger(params.sud, 0, 0, 10)),
+    ...(sud !== undefined ? { sud } : {}),
     elapsedSeconds: String(elapsedSeconds),
     speed: String(speed),
     audioOn: safeBoolean(params.audioOn, mode === "audio" || mode === "mixed"),
